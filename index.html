@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>專案管理平台</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
+<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", "Helvetica Neue", sans-serif;
+  background: #f7f8fa;
+  color: #1f2937;
+  padding: 20px;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+.container { max-width: 1280px; margin: 0 auto; }
+ 
+/* Login screen */
+.login-screen {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.login-card {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+}
+.login-card h1 { font-size: 24px; margin-bottom: 8px; }
+.login-card p { color: #6b7280; margin-bottom: 24px; font-size: 13px; }
+.btn-google {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  color: #374151;
+}
+.btn-google:hover { background: #f9fafb; }
+.btn-google svg { width: 18px; height: 18px; }
+ 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.header h1 { font-size: 22px; font-weight: 600; color: #111827; }
+.header .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  font-size: 12px;
+}
+.user-info img { width: 24px; height: 24px; border-radius: 50%; }
+ 
+.btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.btn-primary { background: #4f46e5; color: white; }
+.btn-primary:hover { background: #4338ca; }
+.btn-secondary { background: white; color: #374151; border: 1px solid #d1d5db; }
+.btn-secondary:hover { background: #f9fafb; }
+.btn-ghost { background: transparent; color: #6b7280; padding: 4px 8px; }
+.btn-ghost:hover { background: #f3f4f6; color: #111827; }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+ 
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: white;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+.stat-label { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+.stat-value { font-size: 26px; font-weight: 700; color: #111827; }
+.stat-value.danger { color: #dc2626; }
+.stat-value.success { color: #059669; }
+.stat-value.indigo { color: #4f46e5; }
+ 
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.chart-card {
+  background: white;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+.chart-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; }
+.chart-wrapper { position: relative; height: 220px; }
+ 
+.filter-bar {
+  background: white;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.filter-bar input, .filter-bar select {
+  padding: 7px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  background: white;
+}
+.filter-bar input { flex: 1; min-width: 200px; }
+ 
+.project-card {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.project-header {
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  border-left: 4px solid var(--project-color, #4f46e5);
+}
+.project-header:hover { background: #fafafa; }
+.project-info { flex: 1; }
+.project-name { font-size: 15px; font-weight: 600; color: #111827; margin-bottom: 2px; }
+.project-meta { font-size: 12px; color: #6b7280; }
+.project-actions { display: flex; gap: 4px; align-items: center; }
+.toggle-icon {
+  display: inline-block;
+  width: 16px;
+  text-align: center;
+  color: #6b7280;
+  transition: transform 0.2s;
+}
+.project-card.collapsed .toggle-icon { transform: rotate(-90deg); }
+.project-card.collapsed .tasks-container { display: none; }
+ 
+.tasks-container {
+  border-top: 1px solid #f3f4f6;
+  padding: 8px 16px 16px;
+}
+.tasks-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+.tasks-table th {
+  text-align: left;
+  padding: 8px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.tasks-table td { padding: 10px 6px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+.tasks-table tr:last-child td { border-bottom: none; }
+.tasks-table tr:hover { background: #fafafa; }
+ 
+.status-badge, .priority-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.status-todo { background: #fef3c7; color: #92400e; }
+.status-doing { background: #dbeafe; color: #1e40af; }
+.status-done { background: #d1fae5; color: #065f46; }
+.priority-high { background: #fee2e2; color: #991b1b; }
+.priority-mid { background: #fef3c7; color: #92400e; }
+.priority-low { background: #e5e7eb; color: #374151; }
+ 
+.deadline-overdue { color: #dc2626; font-weight: 600; }
+.deadline-soon { color: #d97706; font-weight: 500; }
+ 
+.empty-state {
+  background: white;
+  padding: 48px 20px;
+  text-align: center;
+  border-radius: 10px;
+  border: 2px dashed #d1d5db;
+  color: #6b7280;
+}
+.empty-state .icon { font-size: 36px; margin-bottom: 8px; }
+.empty-state .hint { font-size: 13px; margin-top: 4px; }
+.empty-tasks { text-align: center; padding: 16px; color: #9ca3af; font-size: 12px; font-style: italic; }
+ 
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+}
+.modal h2 { font-size: 18px; margin-bottom: 16px; color: #111827; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 4px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+}
+.form-group textarea { resize: vertical; min-height: 60px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+ 
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #111827;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  z-index: 200;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.2s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+ 
+.sync-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  margin-right: 4px;
+}
+.sync-indicator.offline { background: #ef4444; }
+ 
+.config-warning {
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 20px;
+  color: #92400e;
+  font-size: 13px;
+}
+.config-warning code {
+  background: rgba(0,0,0,0.05);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+ 
+@media (max-width: 700px) {
+  .charts-row { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .tasks-table { font-size: 12px; }
+}
+</style>
+</head>
+<body>
+ 
+<div class="container">
+  <!-- Login screen -->
+  <div id="loginScreen" class="login-screen" style="display:none">
+    <div class="login-card">
+      <h1>📋 專案管理平台</h1>
+      <p>請使用 Google 帳號登入</p>
+      <button class="btn-google" onclick="signIn()">
+        <svg viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.79 2.72v2.26h2.91c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.26c-.81.54-1.83.86-3.05.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.34A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.59.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.82.96 4.04l3-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.58-2.58A8.96 8.96 0 0 0 9 0 9 9 0 0 0 .96 4.96l3 2.34C4.67 5.16 6.66 3.58 9 3.58z"/></svg>
+        使用 Google 登入
+      </button>
+      <div id="loginError" style="color:#dc2626;font-size:12px;margin-top:12px"></div>
+    </div>
+  </div>
+ 
+  <!-- Config warning (shown when firebase-config.js missing/invalid) -->
+  <div id="configWarning" class="config-warning" style="display:none">
+    ⚠️ <strong>尚未設定 Firebase</strong><br>
+    請編輯 <code>firebase-config.js</code> 填入你的 Firebase 設定。詳細步驟請參考 <code>README.md</code>。
+  </div>
+ 
+  <!-- Main app -->
+  <div id="appScreen" style="display:none">
+    <div class="header">
+      <div>
+        <h1>📋 專案管理平台</h1>
+        <div style="font-size:12px;color:#6b7280;margin-top:2px">
+          <span class="sync-indicator" id="syncIndicator"></span>
+          <span id="syncStatus">即時同步中</span> · 團隊共用
+        </div>
+      </div>
+      <div class="actions">
+        <div class="user-info">
+          <img id="userPhoto" src="" alt="">
+          <span id="userName"></span>
+          <button class="btn-ghost btn-sm" onclick="signOutUser()">登出</button>
+        </div>
+        <button class="btn btn-primary" onclick="openProjectModal()">＋ 新增專案</button>
+      </div>
+    </div>
+ 
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">專案總數</div><div class="stat-value indigo" id="statProjects">0</div></div>
+      <div class="stat-card"><div class="stat-label">任務總數</div><div class="stat-value" id="statTasks">0</div></div>
+      <div class="stat-card"><div class="stat-label">完成率</div><div class="stat-value success" id="statCompletion">0%</div></div>
+      <div class="stat-card"><div class="stat-label">逾期任務</div><div class="stat-value danger" id="statOverdue">0</div></div>
+    </div>
+ 
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">任務狀態分佈</div>
+        <div class="chart-wrapper"><canvas id="statusChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">負責人工作量</div>
+        <div class="chart-wrapper"><canvas id="ownerChart"></canvas></div>
+      </div>
+    </div>
+ 
+    <div class="filter-bar">
+      <input type="text" id="searchInput" placeholder="🔍 搜尋專案、任務、負責人、產出..." oninput="render()">
+      <select id="filterStatus" onchange="render()">
+        <option value="">全部狀態</option>
+        <option value="todo">待辦</option>
+        <option value="doing">進行中</option>
+        <option value="done">完成</option>
+      </select>
+      <select id="filterOwner" onchange="render()"><option value="">全部負責人</option></select>
+      <select id="filterProject" onchange="render()"><option value="">全部專案</option></select>
+    </div>
+ 
+    <div id="projectsContainer"></div>
+  </div>
+</div>
+ 
+<!-- Modals -->
+<div class="modal-overlay" id="projectModal">
+  <div class="modal">
+    <h2 id="projectModalTitle">新增專案</h2>
+    <input type="hidden" id="projectId">
+    <div class="form-group">
+      <label>專案名稱 *</label>
+      <input type="text" id="projectName" placeholder="例如：2026 Q2 產品上線">
+    </div>
+    <div class="form-group">
+      <label>專案描述</label>
+      <textarea id="projectDesc" placeholder="專案目標、範疇..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>顏色標記</label>
+      <select id="projectColor">
+        <option value="#4f46e5">🟣 紫色</option>
+        <option value="#0891b2">🔵 藍色</option>
+        <option value="#059669">🟢 綠色</option>
+        <option value="#d97706">🟠 橘色</option>
+        <option value="#dc2626">🔴 紅色</option>
+        <option value="#7c3aed">🟪 深紫</option>
+        <option value="#6b7280">⚫ 灰色</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeProjectModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveProject()">儲存</button>
+    </div>
+  </div>
+</div>
+ 
+<div class="modal-overlay" id="taskModal">
+  <div class="modal">
+    <h2 id="taskModalTitle">新增任務</h2>
+    <input type="hidden" id="taskProjectId">
+    <input type="hidden" id="taskId">
+    <div class="form-group">
+      <label>任務名稱 *</label>
+      <input type="text" id="taskTitle" placeholder="例如：完成需求規格文件">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>負責人</label>
+        <input type="text" id="taskOwner" placeholder="姓名" list="ownersList">
+        <datalist id="ownersList"></datalist>
+      </div>
+      <div class="form-group">
+        <label>截止日期</label>
+        <input type="date" id="taskDeadline">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>狀態</label>
+        <select id="taskStatus">
+          <option value="todo">待辦</option>
+          <option value="doing">進行中</option>
+          <option value="done">完成</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>優先級</label>
+        <select id="taskPriority">
+          <option value="mid">中</option>
+          <option value="high">高</option>
+          <option value="low">低</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>產出 (Deliverable)</label>
+      <input type="text" id="taskDeliverable" placeholder="例如：規格書、原型、報告">
+    </div>
+    <div class="form-group">
+      <label>備註</label>
+      <textarea id="taskNotes" placeholder="補充說明..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeTaskModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveTask()">儲存</button>
+    </div>
+  </div>
+</div>
+ 
+<div class="toast" id="toast"></div>
+ 
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {
+  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+  onSnapshot, query, orderBy, serverTimestamp, enableIndexedDbPersistence
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { firebaseConfig } from "./firebase-config.js";
+ 
+// ===== Init =====
+let app, auth, db;
+const isConfigured = firebaseConfig &&
+  firebaseConfig.apiKey &&
+  firebaseConfig.apiKey !== "YOUR_API_KEY";
+ 
+if (!isConfigured) {
+  document.getElementById('configWarning').style.display = 'block';
+} else {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  enableIndexedDbPersistence(db).catch(()=>{}); // offline cache
+  onAuthStateChanged(auth, user => {
+    if (user) showApp(user); else showLogin();
+  });
+}
+ 
+// ===== State =====
+let state = {
+  projects: [],   // [{ id, name, desc, color, createdAt }]
+  tasks: [],      // [{ id, projectId, title, owner, deadline, status, priority, deliverable, notes }]
+  collapsed: JSON.parse(localStorage.getItem('pm_collapsed') || '{}')
+};
+let unsubProjects = null, unsubTasks = null;
+ 
+// ===== Auth UI =====
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('appScreen').style.display = 'none';
+  if (unsubProjects) unsubProjects();
+  if (unsubTasks) unsubTasks();
+}
+function showApp(user) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'block';
+  document.getElementById('userPhoto').src = user.photoURL || '';
+  document.getElementById('userName').textContent = user.displayName || user.email;
+  subscribeData();
+}
+window.signIn = async () => {
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch(e) {
+    document.getElementById('loginError').textContent = '登入失敗：' + e.message;
+  }
+};
+window.signOutUser = () => signOut(auth);
+ 
+// ===== Firestore subscriptions (real-time) =====
+function subscribeData() {
+  unsubProjects = onSnapshot(
+    query(collection(db, 'projects'), orderBy('createdAt', 'asc')),
+    snap => {
+      state.projects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
+      setSync(true);
+    },
+    err => { console.error(err); setSync(false); toast('讀取專案失敗：' + err.message); }
+  );
+  unsubTasks = onSnapshot(
+    collection(db, 'tasks'),
+    snap => {
+      state.tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
+      setSync(true);
+    },
+    err => { console.error(err); setSync(false); toast('讀取任務失敗：' + err.message); }
+  );
+}
+function setSync(ok) {
+  document.getElementById('syncIndicator').classList.toggle('offline', !ok);
+  document.getElementById('syncStatus').textContent = ok ? '即時同步中' : '連線中斷';
+}
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+ 
+// ===== CRUD =====
+window.openProjectModal = (id) => {
+  document.getElementById('projectId').value = id || '';
+  if (id) {
+    const p = state.projects.find(x => x.id === id);
+    document.getElementById('projectModalTitle').textContent = '編輯專案';
+    document.getElementById('projectName').value = p.name;
+    document.getElementById('projectDesc').value = p.desc || '';
+    document.getElementById('projectColor').value = p.color || '#4f46e5';
+  } else {
+    document.getElementById('projectModalTitle').textContent = '新增專案';
+    document.getElementById('projectName').value = '';
+    document.getElementById('projectDesc').value = '';
+    document.getElementById('projectColor').value = '#4f46e5';
+  }
+  document.getElementById('projectModal').classList.add('active');
+};
+window.closeProjectModal = () => document.getElementById('projectModal').classList.remove('active');
+window.saveProject = async () => {
+  const name = document.getElementById('projectName').value.trim();
+  if (!name) { alert('請輸入專案名稱'); return; }
+  const id = document.getElementById('projectId').value;
+  const data = {
+    name,
+    desc: document.getElementById('projectDesc').value.trim(),
+    color: document.getElementById('projectColor').value,
+    updatedAt: serverTimestamp(),
+    updatedBy: auth.currentUser.email
+  };
+  try {
+    if (id) {
+      await updateDoc(doc(db, 'projects', id), data);
+    } else {
+      data.createdAt = serverTimestamp();
+      data.createdBy = auth.currentUser.email;
+      await addDoc(collection(db, 'projects'), data);
+    }
+    closeProjectModal();
+  } catch(e) { toast('儲存失敗：' + e.message); }
+};
+window.deleteProject = async (id) => {
+  if (!confirm('確定要刪除此專案及其所有任務？')) return;
+  try {
+    const tasksToDelete = state.tasks.filter(t => t.projectId === id);
+    await Promise.all(tasksToDelete.map(t => deleteDoc(doc(db, 'tasks', t.id))));
+    await deleteDoc(doc(db, 'projects', id));
+  } catch(e) { toast('刪除失敗：' + e.message); }
+};
+window.openTaskModal = (projectId, taskId) => {
+  document.getElementById('taskProjectId').value = projectId;
+  document.getElementById('taskId').value = taskId || '';
+  refreshOwnersList();
+  if (taskId) {
+    const t = state.tasks.find(x => x.id === taskId);
+    document.getElementById('taskModalTitle').textContent = '編輯任務';
+    document.getElementById('taskTitle').value = t.title;
+    document.getElementById('taskOwner').value = t.owner || '';
+    document.getElementById('taskDeadline').value = t.deadline || '';
+    document.getElementById('taskStatus').value = t.status || 'todo';
+    document.getElementById('taskPriority').value = t.priority || 'mid';
+    document.getElementById('taskDeliverable').value = t.deliverable || '';
+    document.getElementById('taskNotes').value = t.notes || '';
+  } else {
+    document.getElementById('taskModalTitle').textContent = '新增任務';
+    ['taskTitle','taskOwner','taskDeadline','taskDeliverable','taskNotes'].forEach(i => document.getElementById(i).value = '');
+    document.getElementById('taskStatus').value = 'todo';
+    document.getElementById('taskPriority').value = 'mid';
+  }
+  document.getElementById('taskModal').classList.add('active');
+};
+window.closeTaskModal = () => document.getElementById('taskModal').classList.remove('active');
+window.saveTask = async () => {
+  const title = document.getElementById('taskTitle').value.trim();
+  if (!title) { alert('請輸入任務名稱'); return; }
+  const projectId = document.getElementById('taskProjectId').value;
+  const taskId = document.getElementById('taskId').value;
+  const data = {
+    projectId,
+    title,
+    owner: document.getElementById('taskOwner').value.trim(),
+    deadline: document.getElementById('taskDeadline').value,
+    status: document.getElementById('taskStatus').value,
+    priority: document.getElementById('taskPriority').value,
+    deliverable: document.getElementById('taskDeliverable').value.trim(),
+    notes: document.getElementById('taskNotes').value.trim(),
+    updatedAt: serverTimestamp(),
+    updatedBy: auth.currentUser.email
+  };
+  try {
+    if (taskId) {
+      await updateDoc(doc(db, 'tasks', taskId), data);
+    } else {
+      data.createdAt = serverTimestamp();
+      data.createdBy = auth.currentUser.email;
+      await addDoc(collection(db, 'tasks'), data);
+    }
+    closeTaskModal();
+  } catch(e) { toast('儲存失敗：' + e.message); }
+};
+window.deleteTask = async (taskId) => {
+  if (!confirm('確定要刪除此任務？')) return;
+  try { await deleteDoc(doc(db, 'tasks', taskId)); }
+  catch(e) { toast('刪除失敗：' + e.message); }
+};
+window.quickToggleStatus = async (taskId) => {
+  const t = state.tasks.find(x => x.id === taskId);
+  const order = ['todo','doing','done'];
+  const next = order[(order.indexOf(t.status) + 1) % 3];
+  try {
+    await updateDoc(doc(db, 'tasks', taskId), {
+      status: next,
+      updatedAt: serverTimestamp(),
+      updatedBy: auth.currentUser.email
+    });
+  } catch(e) { toast('更新失敗：' + e.message); }
+};
+window.toggleProject = (id) => {
+  state.collapsed[id] = !state.collapsed[id];
+  localStorage.setItem('pm_collapsed', JSON.stringify(state.collapsed));
+  document.getElementById('proj-' + id).classList.toggle('collapsed');
+};
+ 
+// ===== Helpers =====
+function tasksOf(projectId) { return state.tasks.filter(t => t.projectId === projectId); }
+function getAllOwners() {
+  return [...new Set(state.tasks.map(t => t.owner).filter(Boolean))].sort();
+}
+function refreshOwnersList() {
+  document.getElementById('ownersList').innerHTML = getAllOwners().map(o => `<option value="${escapeHtml(o)}">`).join('');
+}
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function statusLabel(s) { return {todo:'待辦', doing:'進行中', done:'完成'}[s] || s; }
+function priorityLabel(p) { return {high:'高', mid:'中', low:'低'}[p] || p; }
+function isOverdue(t) {
+  if (!t.deadline || t.status === 'done') return false;
+  return new Date(t.deadline) < new Date(new Date().toDateString());
+}
+function isSoon(t) {
+  if (!t.deadline || t.status === 'done') return false;
+  const d = (new Date(t.deadline) - new Date()) / 86400000;
+  return d >= 0 && d <= 3;
+}
+ 
+// ===== Render =====
+window.render = function() {
+  const all = state.tasks;
+  document.getElementById('statProjects').textContent = state.projects.length;
+  document.getElementById('statTasks').textContent = all.length;
+  const done = all.filter(t => t.status === 'done').length;
+  document.getElementById('statCompletion').textContent = all.length ? Math.round(done / all.length * 100) + '%' : '0%';
+  document.getElementById('statOverdue').textContent = all.filter(isOverdue).length;
+ 
+  const ownerSel = document.getElementById('filterOwner');
+  const cur1 = ownerSel.value;
+  ownerSel.innerHTML = '<option value="">全部負責人</option>' + getAllOwners().map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
+  ownerSel.value = cur1;
+ 
+  const projSel = document.getElementById('filterProject');
+  const cur2 = projSel.value;
+  projSel.innerHTML = '<option value="">全部專案</option>' + state.projects.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  projSel.value = cur2;
+ 
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const fStatus = document.getElementById('filterStatus').value;
+  const fOwner = document.getElementById('filterOwner').value;
+  const fProject = document.getElementById('filterProject').value;
+ 
+  const filtered = state.projects
+    .filter(p => !fProject || p.id === fProject)
+    .map(p => {
+      const tasks = tasksOf(p.id).filter(t => {
+        if (fStatus && t.status !== fStatus) return false;
+        if (fOwner && t.owner !== fOwner) return false;
+        if (q) {
+          const text = [p.name, t.title, t.owner, t.deliverable, t.notes].join(' ').toLowerCase();
+          if (!text.includes(q)) return false;
+        }
+        return true;
+      });
+      return { ...p, tasks };
+    })
+    .filter(p => {
+      if (!q && !fStatus && !fOwner) return true;
+      return p.tasks.length > 0 || (q && p.name.toLowerCase().includes(q));
+    });
+ 
+  const container = document.getElementById('projectsContainer');
+  if (state.projects.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="icon">📂</div>
+      <div>還沒有任何專案</div>
+      <div class="hint">點擊右上角「＋ 新增專案」開始建立</div>
+    </div>`;
+  } else if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="icon">🔍</div>
+      <div>沒有符合條件的結果</div>
+    </div>`;
+  } else {
+    container.innerHTML = filtered.map(p => renderProject(p)).join('');
+  }
+  renderCharts(all);
+};
+ 
+function renderProject(p) {
+  const total = p.tasks.length;
+  const done = p.tasks.filter(t => t.status === 'done').length;
+  const overdue = p.tasks.filter(isOverdue).length;
+  const collapsed = state.collapsed[p.id] ? 'collapsed' : '';
+  return `
+    <div class="project-card ${collapsed}" id="proj-${p.id}" style="--project-color:${p.color}">
+      <div class="project-header" onclick="toggleProject('${p.id}')">
+        <div class="project-info">
+          <div class="project-name"><span class="toggle-icon">▼</span> ${escapeHtml(p.name)}</div>
+          <div class="project-meta">
+            ${p.desc ? escapeHtml(p.desc) + ' · ' : ''}
+            共 ${total} 個任務 · 完成 ${done} ${overdue ? `· <span style="color:#dc2626">逾期 ${overdue}</span>` : ''}
+          </div>
+        </div>
+        <div class="project-actions" onclick="event.stopPropagation()">
+          <button class="btn btn-secondary btn-sm" onclick="openTaskModal('${p.id}')">＋ 任務</button>
+          <button class="btn btn-ghost btn-sm" onclick="openProjectModal('${p.id}')">編輯</button>
+          <button class="btn btn-ghost btn-sm" onclick="deleteProject('${p.id}')" style="color:#dc2626">刪除</button>
+        </div>
+      </div>
+      <div class="tasks-container">
+        ${p.tasks.length === 0
+          ? `<div class="empty-tasks">尚無任務 — 點擊「＋ 任務」新增</div>`
+          : `<table class="tasks-table">
+              <thead><tr>
+                <th style="width:80px">狀態</th><th>任務</th><th>負責人</th>
+                <th>截止日</th><th>產出</th><th>優先級</th><th style="width:100px">操作</th>
+              </tr></thead>
+              <tbody>${p.tasks.map(t => renderTask(p.id, t)).join('')}</tbody>
+            </table>`
+        }
+      </div>
+    </div>`;
+}
+function renderTask(projectId, t) {
+  const overdueClass = isOverdue(t) ? 'deadline-overdue' : (isSoon(t) ? 'deadline-soon' : '');
+  return `
+    <tr>
+      <td><span class="status-badge status-${t.status}" style="cursor:pointer" onclick="quickToggleStatus('${t.id}')" title="點擊切換">${statusLabel(t.status)}</span></td>
+      <td>
+        <div style="font-weight:500;color:#111827">${escapeHtml(t.title)}</div>
+        ${t.notes ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${escapeHtml(t.notes)}</div>` : ''}
+      </td>
+      <td>${t.owner ? escapeHtml(t.owner) : '<span style="color:#9ca3af">—</span>'}</td>
+      <td class="${overdueClass}">${t.deadline || '<span style="color:#9ca3af">—</span>'}</td>
+      <td>${t.deliverable ? escapeHtml(t.deliverable) : '<span style="color:#9ca3af">—</span>'}</td>
+      <td><span class="priority-badge priority-${t.priority}">${priorityLabel(t.priority)}</span></td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="openTaskModal('${projectId}','${t.id}')">編輯</button>
+        <button class="btn btn-ghost btn-sm" onclick="deleteTask('${t.id}')" style="color:#dc2626">×</button>
+      </td>
+    </tr>`;
+}
+ 
+// ===== Charts =====
+let statusChart, ownerChart;
+function renderCharts(all) {
+  const counts = { todo: 0, doing: 0, done: 0 };
+  all.forEach(t => counts[t.status] = (counts[t.status]||0) + 1);
+  const sCtx = document.getElementById('statusChart').getContext('2d');
+  const sData = {
+    labels: ['待辦', '進行中', '完成'],
+    datasets: [{ data: [counts.todo, counts.doing, counts.done], backgroundColor: ['#fbbf24', '#60a5fa', '#34d399'], borderWidth: 0 }]
+  };
+  if (statusChart) { statusChart.data = sData; statusChart.update(); }
+  else statusChart = new Chart(sCtx, { type:'doughnut', data:sData, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ font:{ size:12 } } } } } });
+ 
+  const ownerCounts = {};
+  all.forEach(t => {
+    const o = t.owner || '未指派';
+    if (!ownerCounts[o]) ownerCounts[o] = { todo:0, doing:0, done:0 };
+    ownerCounts[o][t.status]++;
+  });
+  const owners = Object.keys(ownerCounts);
+  const oCtx = document.getElementById('ownerChart').getContext('2d');
+  const oData = {
+    labels: owners,
+    datasets: [
+      { label:'待辦', data: owners.map(o => ownerCounts[o].todo), backgroundColor:'#fbbf24' },
+      { label:'進行中', data: owners.map(o => ownerCounts[o].doing), backgroundColor:'#60a5fa' },
+      { label:'完成', data: owners.map(o => ownerCounts[o].done), backgroundColor:'#34d399' }
+    ]
+  };
+  if (ownerChart) { ownerChart.data = oData; ownerChart.update(); }
+  else ownerChart = new Chart(oCtx, { type:'bar', data:oData, options:{ responsive:true, maintainAspectRatio:false, scales:{ x:{ stacked:true }, y:{ stacked:true, ticks:{ stepSize:1 } } }, plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11 } } } } } });
+}
+ 
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); });
+});
+</script>
+</body>
+</html>
