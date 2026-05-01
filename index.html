@@ -230,6 +230,8 @@ body {
 .status-todo { background: #fef3c7; color: #92400e; }
 .status-doing { background: #dbeafe; color: #1e40af; }
 .status-done { background: #d1fae5; color: #065f46; }
+.status-active { background: #e0e7ff; color: #3730a3; }
+.status-completed { background: #d1fae5; color: #065f46; }
 .priority-high { background: #fee2e2; color: #991b1b; }
 .priority-mid { background: #fef3c7; color: #92400e; }
 .priority-low { background: #e5e7eb; color: #374151; }
@@ -481,6 +483,11 @@ body {
 
       <div class="filter-bar">
         <input type="text" id="searchInput" placeholder="🔍 搜尋專案、任務、負責人、產出..." oninput="render()">
+        <select id="filterProjectCategory" onchange="render()">
+          <option value="active">進行中的專案</option>
+          <option value="completed">已完成的專案</option>
+          <option value="">全部分類</option>
+        </select>
         <select id="filterStatus" onchange="render()">
           <option value="">全部狀態</option>
           <option value="todo">待辦</option>
@@ -525,6 +532,13 @@ body {
     <div class="form-group">
       <label>專案描述</label>
       <textarea id="projectDesc" placeholder="專案目標、範疇..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>專案分類</label>
+      <select id="projectCategory">
+        <option value="active">進行中</option>
+        <option value="completed">已完成</option>
+      </select>
     </div>
     <div class="form-group">
       <label>顏色標記</label>
@@ -707,11 +721,13 @@ window.openProjectModal = (id) => {
     document.getElementById('projectModalTitle').textContent = '編輯專案';
     document.getElementById('projectName').value = p.name;
     document.getElementById('projectDesc').value = p.desc || '';
+    document.getElementById('projectCategory').value = projectCategory(p);
     document.getElementById('projectColor').value = p.color || '#4f46e5';
   } else {
     document.getElementById('projectModalTitle').textContent = '新增專案';
     document.getElementById('projectName').value = '';
     document.getElementById('projectDesc').value = '';
+    document.getElementById('projectCategory').value = 'active';
     document.getElementById('projectColor').value = '#4f46e5';
   }
   document.getElementById('projectModal').classList.add('active');
@@ -724,6 +740,7 @@ window.saveProject = async () => {
   const data = {
     name,
     desc: document.getElementById('projectDesc').value.trim(),
+    category: document.getElementById('projectCategory').value,
     color: document.getElementById('projectColor').value,
     updatedAt: serverTimestamp(),
     updatedBy: auth.currentUser.email
@@ -746,6 +763,19 @@ window.deleteProject = async (id) => {
     await Promise.all(tasksToDelete.map(t => deleteDoc(doc(db, 'tasks', t.id))));
     await deleteDoc(doc(db, 'projects', id));
   } catch(e) { toast('刪除失敗：' + e.message); }
+};
+window.toggleProjectCategory = async (id) => {
+  const p = state.projects.find(x => x.id === id);
+  if (!p) return;
+  const next = projectCategory(p) === 'completed' ? 'active' : 'completed';
+  try {
+    await updateDoc(doc(db, 'projects', id), {
+      category: next,
+      updatedAt: serverTimestamp(),
+      updatedBy: auth.currentUser.email
+    });
+    toast(next === 'completed' ? '已移到已完成專案' : '已恢復為進行中專案');
+  } catch(e) { toast('更新分類失敗：' + e.message); }
 };
 window.openTaskModal = (projectId, taskId) => {
   document.getElementById('taskProjectId').value = projectId;
@@ -834,6 +864,8 @@ function escapeHtml(s) {
 }
 function statusLabel(s) { return {todo:'待辦', doing:'進行中', done:'完成'}[s] || s; }
 function priorityLabel(p) { return {high:'高', mid:'中', low:'低'}[p] || p; }
+function projectCategory(p) { return p.category || 'active'; }
+function projectCategoryLabel(category) { return category === 'completed' ? '已完成' : '進行中'; }
 function isOverdue(t) {
   if (!t.deadline || t.status === 'done') return false;
   return new Date(t.deadline) < new Date(new Date().toDateString());
@@ -871,7 +903,8 @@ function relativeDateText(dateStr) {
 
 window.render = function() {
   const all = state.tasks;
-  document.getElementById('statProjects').textContent = state.projects.length;
+  const completedProjects = state.projects.filter(p => projectCategory(p) === 'completed').length;
+  document.getElementById('statProjects').textContent = `${state.projects.length} / 完成 ${completedProjects}`;
   document.getElementById('statTasks').textContent = all.length;
   const done = all.filter(t => t.status === 'done').length;
   document.getElementById('statCompletion').textContent = all.length ? Math.round(done / all.length * 100) + '%' : '0%';
@@ -888,11 +921,13 @@ window.render = function() {
   projSel.value = cur2;
 
   const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const fProjectCategory = document.getElementById('filterProjectCategory').value;
   const fStatus = document.getElementById('filterStatus').value;
   const fOwner = document.getElementById('filterOwner').value;
   const fProject = document.getElementById('filterProject').value;
 
   const filtered = state.projects
+    .filter(p => !fProjectCategory || projectCategory(p) === fProjectCategory)
     .filter(p => !fProject || p.id === fProject)
     .map(p => {
       const tasks = tasksOf(p.id).filter(t => {
@@ -934,11 +969,17 @@ function renderProject(p) {
   const done = p.tasks.filter(t => t.status === 'done').length;
   const overdue = p.tasks.filter(isOverdue).length;
   const collapsed = state.collapsed[p.id] ? 'collapsed' : '';
+  const category = projectCategory(p);
+  const categoryLabel = projectCategoryLabel(category);
+  const toggleCategoryLabel = category === 'completed' ? '恢復進行中' : '移到已完成';
   return `
     <div class="project-card ${collapsed}" id="proj-${p.id}" style="--project-color:${p.color}">
       <div class="project-header" onclick="toggleProject('${p.id}')">
         <div class="project-info">
-          <div class="project-name"><span class="toggle-icon">▼</span> ${escapeHtml(p.name)}</div>
+          <div class="project-name">
+            <span class="toggle-icon">▼</span> ${escapeHtml(p.name)}
+            <span class="status-badge status-${category === 'completed' ? 'completed' : 'active'}">${categoryLabel}</span>
+          </div>
           <div class="project-meta">
             ${p.desc ? escapeHtml(p.desc) + ' · ' : ''}
             共 ${total} 個任務 · 完成 ${done} ${overdue ? `· <span style="color:#dc2626">逾期 ${overdue}</span>` : ''}
@@ -946,6 +987,7 @@ function renderProject(p) {
         </div>
         <div class="project-actions" onclick="event.stopPropagation()">
           <button class="btn btn-secondary btn-sm" onclick="openTaskModal('${p.id}')">＋ 任務</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleProjectCategory('${p.id}')">${toggleCategoryLabel}</button>
           <button class="btn btn-ghost btn-sm" onclick="openProjectModal('${p.id}')">編輯</button>
           <button class="btn btn-ghost btn-sm" onclick="deleteProject('${p.id}')" style="color:#dc2626">刪除</button>
         </div>
