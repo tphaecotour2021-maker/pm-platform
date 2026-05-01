@@ -18,7 +18,7 @@ body {
   min-height: 100vh;
 }
 .container { max-width: 1280px; margin: 0 auto; }
- 
+
 /* Login screen */
 .login-screen {
   min-height: 80vh;
@@ -54,12 +54,12 @@ body {
 }
 .btn-google:hover { background: #f9fafb; }
 .btn-google svg { width: 18px; height: 18px; }
- 
+
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -76,7 +76,29 @@ body {
   font-size: 12px;
 }
 .user-info img { width: 24px; height: 24px; border-radius: 50%; }
- 
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.tab-btn {
+  padding: 10px 18px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #6b7280;
+  font-family: inherit;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+  font-weight: 500;
+}
+.tab-btn:hover { color: #374151; }
+.tab-btn.active { color: #4f46e5; border-bottom-color: #4f46e5; }
+
 .btn {
   padding: 8px 14px;
   border: none;
@@ -94,7 +116,7 @@ body {
 .btn-ghost { background: transparent; color: #6b7280; padding: 4px 8px; }
 .btn-ghost:hover { background: #f3f4f6; color: #111827; }
 .btn-sm { padding: 4px 10px; font-size: 12px; }
- 
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -112,7 +134,7 @@ body {
 .stat-value.danger { color: #dc2626; }
 .stat-value.success { color: #059669; }
 .stat-value.indigo { color: #4f46e5; }
- 
+
 .charts-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -127,7 +149,7 @@ body {
 }
 .chart-title { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #374151; }
 .chart-wrapper { position: relative; height: 220px; }
- 
+
 .filter-bar {
   background: white;
   padding: 12px;
@@ -148,7 +170,7 @@ body {
   background: white;
 }
 .filter-bar input { flex: 1; min-width: 200px; }
- 
+
 .project-card {
   background: white;
   border-radius: 10px;
@@ -178,7 +200,7 @@ body {
 }
 .project-card.collapsed .toggle-icon { transform: rotate(-90deg); }
 .project-card.collapsed .tasks-container { display: none; }
- 
+
 .tasks-container {
   border-top: 1px solid #f3f4f6;
   padding: 8px 16px 16px;
@@ -197,7 +219,7 @@ body {
 .tasks-table td { padding: 10px 6px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
 .tasks-table tr:last-child td { border-bottom: none; }
 .tasks-table tr:hover { background: #fafafa; }
- 
+
 .status-badge, .priority-badge {
   display: inline-block;
   padding: 2px 8px;
@@ -211,10 +233,10 @@ body {
 .priority-high { background: #fee2e2; color: #991b1b; }
 .priority-mid { background: #fef3c7; color: #92400e; }
 .priority-low { background: #e5e7eb; color: #374151; }
- 
+
 .deadline-overdue { color: #dc2626; font-weight: 600; }
 .deadline-soon { color: #d97706; font-weight: 500; }
- 
+
 .empty-state {
   background: white;
   padding: 48px 20px;
@@ -226,7 +248,58 @@ body {
 .empty-state .icon { font-size: 36px; margin-bottom: 8px; }
 .empty-state .hint { font-size: 13px; margin-top: 4px; }
 .empty-tasks { text-align: center; padding: 16px; color: #9ca3af; font-size: 12px; font-style: italic; }
- 
+
+/* Daily view */
+.daily-group { margin-bottom: 20px; }
+.daily-group-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 8px; padding: 0 4px;
+}
+.daily-group-title { font-size: 14px; font-weight: 600; color: #374151; }
+.daily-group-date { font-size: 12px; color: #9ca3af; }
+.daily-group-count {
+  background: #e5e7eb; color: #4b5563;
+  padding: 1px 8px; border-radius: 10px;
+  font-size: 11px; font-weight: 500;
+}
+.daily-group.overdue .daily-group-title { color: #dc2626; }
+.daily-group.overdue .daily-group-count { background: #fee2e2; color: #991b1b; }
+.daily-group.today .daily-group-title { color: #4f46e5; }
+.daily-group.today .daily-group-count { background: #e0e7ff; color: #3730a3; }
+
+.daily-card {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+.daily-row {
+  display: grid;
+  grid-template-columns: 80px 1fr auto auto auto;
+  gap: 12px;
+  padding: 12px 14px;
+  align-items: center;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+}
+.daily-row:last-child { border-bottom: none; }
+.daily-row:hover { background: #fafafa; }
+.daily-task-title { font-weight: 500; color: #111827; }
+.daily-task-deliverable { font-size: 11px; color: #6b7280; margin-top: 2px; }
+.project-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 12px;
+  font-size: 11px; font-weight: 500;
+  background: #f3f4f6; color: #374151;
+  white-space: nowrap;
+  max-width: 180px; overflow: hidden; text-overflow: ellipsis;
+}
+.project-pill .dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.daily-owner { font-size: 12px; color: #6b7280; min-width: 60px; }
+.daily-deadline-text { font-size: 11px; color: #9ca3af; }
+
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.4);
@@ -260,7 +333,7 @@ body {
 .form-group textarea { resize: vertical; min-height: 60px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
- 
+
 .toast {
   position: fixed;
   bottom: 20px;
@@ -277,7 +350,7 @@ body {
   pointer-events: none;
 }
 .toast.show { opacity: 1; transform: translateY(0); }
- 
+
 .sync-indicator {
   display: inline-block;
   width: 8px;
@@ -287,7 +360,7 @@ body {
   margin-right: 4px;
 }
 .sync-indicator.offline { background: #ef4444; }
- 
+
 .config-warning {
   background: #fef3c7;
   border: 1px solid #fbbf24;
@@ -303,16 +376,22 @@ body {
   border-radius: 3px;
   font-size: 12px;
 }
- 
+
 @media (max-width: 700px) {
   .charts-row { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
   .tasks-table { font-size: 12px; }
+  .daily-row { grid-template-columns: 70px 1fr; gap: 8px; }
+  .daily-row > .project-pill,
+  .daily-row > .daily-owner,
+  .daily-row > .daily-deadline-text {
+    grid-column: 2; margin-top: 4px;
+  }
 }
 </style>
 </head>
 <body>
- 
+
 <div class="container">
   <!-- Login screen -->
   <div id="loginScreen" class="login-screen" style="display:none">
@@ -326,13 +405,13 @@ body {
       <div id="loginError" style="color:#dc2626;font-size:12px;margin-top:12px"></div>
     </div>
   </div>
- 
-  <!-- Config warning (shown when firebase-config.js missing/invalid) -->
+
+  <!-- Config warning -->
   <div id="configWarning" class="config-warning" style="display:none">
     ⚠️ <strong>尚未設定 Firebase</strong><br>
     請編輯 <code>firebase-config.js</code> 填入你的 Firebase 設定。詳細步驟請參考 <code>README.md</code>。
   </div>
- 
+
   <!-- Main app -->
   <div id="appScreen" style="display:none">
     <div class="header">
@@ -352,41 +431,66 @@ body {
         <button class="btn btn-primary" onclick="openProjectModal()">＋ 新增專案</button>
       </div>
     </div>
- 
-    <div class="stats-grid">
-      <div class="stat-card"><div class="stat-label">專案總數</div><div class="stat-value indigo" id="statProjects">0</div></div>
-      <div class="stat-card"><div class="stat-label">任務總數</div><div class="stat-value" id="statTasks">0</div></div>
-      <div class="stat-card"><div class="stat-label">完成率</div><div class="stat-value success" id="statCompletion">0%</div></div>
-      <div class="stat-card"><div class="stat-label">逾期任務</div><div class="stat-value danger" id="statOverdue">0</div></div>
+
+    <div class="tabs">
+      <button class="tab-btn active" id="tabProjects" onclick="switchView('projects')">📋 專案視圖</button>
+      <button class="tab-btn" id="tabDaily" onclick="switchView('daily')">📅 每日任務</button>
     </div>
- 
-    <div class="charts-row">
-      <div class="chart-card">
-        <div class="chart-title">任務狀態分佈</div>
-        <div class="chart-wrapper"><canvas id="statusChart"></canvas></div>
+
+    <!-- Projects view -->
+    <div id="viewProjects">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">專案總數</div><div class="stat-value indigo" id="statProjects">0</div></div>
+        <div class="stat-card"><div class="stat-label">任務總數</div><div class="stat-value" id="statTasks">0</div></div>
+        <div class="stat-card"><div class="stat-label">完成率</div><div class="stat-value success" id="statCompletion">0%</div></div>
+        <div class="stat-card"><div class="stat-label">逾期任務</div><div class="stat-value danger" id="statOverdue">0</div></div>
       </div>
-      <div class="chart-card">
-        <div class="chart-title">負責人工作量</div>
-        <div class="chart-wrapper"><canvas id="ownerChart"></canvas></div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-title">任務狀態分佈</div>
+          <div class="chart-wrapper"><canvas id="statusChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">負責人工作量</div>
+          <div class="chart-wrapper"><canvas id="ownerChart"></canvas></div>
+        </div>
       </div>
+
+      <div class="filter-bar">
+        <input type="text" id="searchInput" placeholder="🔍 搜尋專案、任務、負責人、產出..." oninput="render()">
+        <select id="filterStatus" onchange="render()">
+          <option value="">全部狀態</option>
+          <option value="todo">待辦</option>
+          <option value="doing">進行中</option>
+          <option value="done">完成</option>
+        </select>
+        <select id="filterOwner" onchange="render()"><option value="">全部負責人</option></select>
+        <select id="filterProject" onchange="render()"><option value="">全部專案</option></select>
+      </div>
+
+      <div id="projectsContainer"></div>
     </div>
- 
-    <div class="filter-bar">
-      <input type="text" id="searchInput" placeholder="🔍 搜尋專案、任務、負責人、產出..." oninput="render()">
-      <select id="filterStatus" onchange="render()">
-        <option value="">全部狀態</option>
-        <option value="todo">待辦</option>
-        <option value="doing">進行中</option>
-        <option value="done">完成</option>
-      </select>
-      <select id="filterOwner" onchange="render()"><option value="">全部負責人</option></select>
-      <select id="filterProject" onchange="render()"><option value="">全部專案</option></select>
+
+    <!-- Daily view -->
+    <div id="viewDaily" style="display:none">
+      <div class="filter-bar">
+        <select id="dailyFilterOwner" onchange="renderDaily()" style="flex:1">
+          <option value="">👥 全部負責人的任務</option>
+        </select>
+        <select id="dailyFilterStatus" onchange="renderDaily()">
+          <option value="active">尚未完成</option>
+          <option value="">含已完成</option>
+          <option value="todo">只看待辦</option>
+          <option value="doing">只看進行中</option>
+          <option value="done">只看已完成</option>
+        </select>
+      </div>
+      <div id="dailyContainer"></div>
     </div>
- 
-    <div id="projectsContainer"></div>
   </div>
 </div>
- 
+
 <!-- Modals -->
 <div class="modal-overlay" id="projectModal">
   <div class="modal">
@@ -418,7 +522,7 @@ body {
     </div>
   </div>
 </div>
- 
+
 <div class="modal-overlay" id="taskModal">
   <div class="modal">
     <h2 id="taskModalTitle">新增任務</h2>
@@ -471,9 +575,9 @@ body {
     </div>
   </div>
 </div>
- 
+
 <div class="toast" id="toast"></div>
- 
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
@@ -484,34 +588,32 @@ import {
   onSnapshot, query, orderBy, serverTimestamp, enableIndexedDbPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
- 
-// ===== Init =====
+
 let app, auth, db;
 const isConfigured = firebaseConfig &&
   firebaseConfig.apiKey &&
   firebaseConfig.apiKey !== "YOUR_API_KEY";
- 
+
 if (!isConfigured) {
   document.getElementById('configWarning').style.display = 'block';
 } else {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
-  enableIndexedDbPersistence(db).catch(()=>{}); // offline cache
+  enableIndexedDbPersistence(db).catch(()=>{});
   onAuthStateChanged(auth, user => {
     if (user) showApp(user); else showLogin();
   });
 }
- 
-// ===== State =====
+
 let state = {
-  projects: [],   // [{ id, name, desc, color, createdAt }]
-  tasks: [],      // [{ id, projectId, title, owner, deadline, status, priority, deliverable, notes }]
-  collapsed: JSON.parse(localStorage.getItem('pm_collapsed') || '{}')
+  projects: [],
+  tasks: [],
+  collapsed: JSON.parse(localStorage.getItem('pm_collapsed') || '{}'),
+  view: localStorage.getItem('pm_view') || 'projects'
 };
 let unsubProjects = null, unsubTasks = null;
- 
-// ===== Auth UI =====
+
 function showLogin() {
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('appScreen').style.display = 'none';
@@ -523,6 +625,7 @@ function showApp(user) {
   document.getElementById('appScreen').style.display = 'block';
   document.getElementById('userPhoto').src = user.photoURL || '';
   document.getElementById('userName').textContent = user.displayName || user.email;
+  switchView(state.view);
   subscribeData();
 }
 window.signIn = async () => {
@@ -533,14 +636,23 @@ window.signIn = async () => {
   }
 };
 window.signOutUser = () => signOut(auth);
- 
-// ===== Firestore subscriptions (real-time) =====
+
+window.switchView = (v) => {
+  state.view = v;
+  localStorage.setItem('pm_view', v);
+  document.getElementById('tabProjects').classList.toggle('active', v === 'projects');
+  document.getElementById('tabDaily').classList.toggle('active', v === 'daily');
+  document.getElementById('viewProjects').style.display = v === 'projects' ? 'block' : 'none';
+  document.getElementById('viewDaily').style.display = v === 'daily' ? 'block' : 'none';
+  if (v === 'daily') renderDaily(); else render();
+};
+
 function subscribeData() {
   unsubProjects = onSnapshot(
     query(collection(db, 'projects'), orderBy('createdAt', 'asc')),
     snap => {
       state.projects = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      render();
+      if (state.view === 'daily') renderDaily(); else render();
       setSync(true);
     },
     err => { console.error(err); setSync(false); toast('讀取專案失敗：' + err.message); }
@@ -549,7 +661,7 @@ function subscribeData() {
     collection(db, 'tasks'),
     snap => {
       state.tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      render();
+      if (state.view === 'daily') renderDaily(); else render();
       setSync(true);
     },
     err => { console.error(err); setSync(false); toast('讀取任務失敗：' + err.message); }
@@ -565,8 +677,7 @@ function toast(msg) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2400);
 }
- 
-// ===== CRUD =====
+
 window.openProjectModal = (id) => {
   document.getElementById('projectId').value = id || '';
   if (id) {
@@ -687,8 +798,7 @@ window.toggleProject = (id) => {
   localStorage.setItem('pm_collapsed', JSON.stringify(state.collapsed));
   document.getElementById('proj-' + id).classList.toggle('collapsed');
 };
- 
-// ===== Helpers =====
+
 function tasksOf(projectId) { return state.tasks.filter(t => t.projectId === projectId); }
 function getAllOwners() {
   return [...new Set(state.tasks.map(t => t.owner).filter(Boolean))].sort();
@@ -711,8 +821,16 @@ function isSoon(t) {
   const d = (new Date(t.deadline) - new Date()) / 86400000;
   return d >= 0 && d <= 3;
 }
- 
-// ===== Render =====
+function dayDiff(deadlineStr) {
+  if (!deadlineStr) return null;
+  const dl = new Date(deadlineStr + 'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.round((dl - today) / 86400000);
+}
+function weekday(d) {
+  return ['週日','週一','週二','週三','週四','週五','週六'][d.getDay()];
+}
+
 window.render = function() {
   const all = state.tasks;
   document.getElementById('statProjects').textContent = state.projects.length;
@@ -720,22 +838,22 @@ window.render = function() {
   const done = all.filter(t => t.status === 'done').length;
   document.getElementById('statCompletion').textContent = all.length ? Math.round(done / all.length * 100) + '%' : '0%';
   document.getElementById('statOverdue').textContent = all.filter(isOverdue).length;
- 
+
   const ownerSel = document.getElementById('filterOwner');
   const cur1 = ownerSel.value;
   ownerSel.innerHTML = '<option value="">全部負責人</option>' + getAllOwners().map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
   ownerSel.value = cur1;
- 
+
   const projSel = document.getElementById('filterProject');
   const cur2 = projSel.value;
   projSel.innerHTML = '<option value="">全部專案</option>' + state.projects.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
   projSel.value = cur2;
- 
+
   const q = document.getElementById('searchInput').value.toLowerCase().trim();
   const fStatus = document.getElementById('filterStatus').value;
   const fOwner = document.getElementById('filterOwner').value;
   const fProject = document.getElementById('filterProject').value;
- 
+
   const filtered = state.projects
     .filter(p => !fProject || p.id === fProject)
     .map(p => {
@@ -754,7 +872,7 @@ window.render = function() {
       if (!q && !fStatus && !fOwner) return true;
       return p.tasks.length > 0 || (q && p.name.toLowerCase().includes(q));
     });
- 
+
   const container = document.getElementById('projectsContainer');
   if (state.projects.length === 0) {
     container.innerHTML = `<div class="empty-state">
@@ -772,7 +890,7 @@ window.render = function() {
   }
   renderCharts(all);
 };
- 
+
 function renderProject(p) {
   const total = p.tasks.length;
   const done = p.tasks.filter(t => t.status === 'done').length;
@@ -827,8 +945,143 @@ function renderTask(projectId, t) {
       </td>
     </tr>`;
 }
- 
-// ===== Charts =====
+
+window.renderDaily = function() {
+  const ownerSel = document.getElementById('dailyFilterOwner');
+  const cur = ownerSel.value;
+  ownerSel.innerHTML = '<option value="">👥 全部負責人的任務</option>' +
+    getAllOwners().map(o => `<option value="${escapeHtml(o)}">👤 ${escapeHtml(o)}</option>`).join('');
+  ownerSel.value = cur;
+
+  const fOwner = ownerSel.value;
+  const fStatus = document.getElementById('dailyFilterStatus').value;
+
+  const projectMap = {};
+  state.projects.forEach(p => projectMap[p.id] = p);
+  const all = state.tasks
+    .map(t => ({ ...t, _project: projectMap[t.projectId] }))
+    .filter(t => t._project);
+
+  const filtered = all.filter(t => {
+    if (fOwner && t.owner !== fOwner) return false;
+    if (fStatus === 'active' && t.status === 'done') return false;
+    if (fStatus === 'todo' && t.status !== 'todo') return false;
+    if (fStatus === 'doing' && t.status !== 'doing') return false;
+    if (fStatus === 'done' && t.status !== 'done') return false;
+    return true;
+  });
+
+  const groups = {
+    overdue: { title: '🔴 已逾期', tasks: [], cls: 'overdue' },
+    today: { title: '📌 今天', tasks: [], cls: 'today' },
+    tomorrow: { title: '明天', tasks: [], cls: '' },
+    thisWeek: { title: '本週剩餘', tasks: [], cls: '' },
+    nextWeek: { title: '下週', tasks: [], cls: '' },
+    later: { title: '更之後', tasks: [], cls: '' },
+    noDate: { title: '⏳ 沒設定截止日', tasks: [], cls: '' }
+  };
+
+  filtered.forEach(t => {
+    if (!t.deadline) { groups.noDate.tasks.push(t); return; }
+    const diff = dayDiff(t.deadline);
+    if (diff < 0) groups.overdue.tasks.push(t);
+    else if (diff === 0) groups.today.tasks.push(t);
+    else if (diff === 1) groups.tomorrow.tasks.push(t);
+    else if (diff <= 7) groups.thisWeek.tasks.push(t);
+    else if (diff <= 14) groups.nextWeek.tasks.push(t);
+    else groups.later.tasks.push(t);
+  });
+
+  const prioOrder = { high: 0, mid: 1, low: 2 };
+  Object.values(groups).forEach(g => {
+    g.tasks.sort((a, b) => {
+      if (a.deadline && b.deadline && a.deadline !== b.deadline) {
+        return a.deadline < b.deadline ? -1 : 1;
+      }
+      return (prioOrder[a.priority]||1) - (prioOrder[b.priority]||1);
+    });
+  });
+
+  const container = document.getElementById('dailyContainer');
+  const totalTasks = filtered.length;
+
+  if (state.projects.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="icon">📂</div>
+      <div>還沒有任何專案</div>
+      <div class="hint">先建立專案與任務，這裡才會顯示每日待辦</div>
+    </div>`;
+    return;
+  }
+
+  if (totalTasks === 0) {
+    const owner = fOwner ? `${fOwner} ` : '';
+    container.innerHTML = `<div class="empty-state">
+      <div class="icon">🎉</div>
+      <div>${owner}沒有任務需要處理</div>
+    </div>`;
+    return;
+  }
+
+  let html = '';
+  for (const key of ['overdue','today','tomorrow','thisWeek','nextWeek','later','noDate']) {
+    const g = groups[key];
+    if (g.tasks.length === 0) continue;
+
+    let dateLabel = '';
+    if (key === 'today') {
+      const t = new Date();
+      dateLabel = `${t.getMonth()+1}/${t.getDate()} (${weekday(t)})`;
+    } else if (key === 'tomorrow') {
+      const t = new Date(); t.setDate(t.getDate() + 1);
+      dateLabel = `${t.getMonth()+1}/${t.getDate()} (${weekday(t)})`;
+    }
+
+    html += `<div class="daily-group ${g.cls}">
+      <div class="daily-group-header">
+        <span class="daily-group-title">${g.title}</span>
+        ${dateLabel ? `<span class="daily-group-date">${dateLabel}</span>` : ''}
+        <span class="daily-group-count">${g.tasks.length}</span>
+      </div>
+      <div class="daily-card">
+        ${g.tasks.map(t => renderDailyRow(t)).join('')}
+      </div>
+    </div>`;
+  }
+
+  container.innerHTML = html;
+};
+
+function renderDailyRow(t) {
+  const p = t._project;
+  const overdueClass = isOverdue(t) ? 'deadline-overdue' : (isSoon(t) ? 'deadline-soon' : '');
+  let dateText = '—';
+  if (t.deadline) {
+    const diff = dayDiff(t.deadline);
+    const d = new Date(t.deadline + 'T00:00:00');
+    if (diff === 0) dateText = '今天';
+    else if (diff === 1) dateText = '明天';
+    else if (diff === -1) dateText = '昨天';
+    else if (diff < 0) dateText = `逾期 ${-diff} 天`;
+    else if (diff <= 7) dateText = `${diff} 天後 (${weekday(d)})`;
+    else dateText = `${d.getMonth()+1}/${d.getDate()}`;
+  }
+  return `
+    <div class="daily-row" onclick="openTaskModal('${p.id}','${t.id}')">
+      <span class="status-badge status-${t.status}" style="cursor:pointer" onclick="event.stopPropagation();quickToggleStatus('${t.id}')" title="點擊切換">${statusLabel(t.status)}</span>
+      <div>
+        <div class="daily-task-title">${escapeHtml(t.title)}</div>
+        ${t.deliverable ? `<div class="daily-task-deliverable">📦 ${escapeHtml(t.deliverable)}</div>` : ''}
+      </div>
+      <div class="project-pill" title="${escapeHtml(p.name)}">
+        <span class="dot" style="background:${p.color}"></span>${escapeHtml(p.name)}
+      </div>
+      <div class="daily-owner">${t.owner ? '👤 ' + escapeHtml(t.owner) : '<span style="color:#d1d5db">未指派</span>'}</div>
+      <div class="daily-deadline-text ${overdueClass}">${dateText}</div>
+    </div>
+  `;
+}
+
 let statusChart, ownerChart;
 function renderCharts(all) {
   const counts = { todo: 0, doing: 0, done: 0 };
@@ -840,7 +1093,7 @@ function renderCharts(all) {
   };
   if (statusChart) { statusChart.data = sData; statusChart.update(); }
   else statusChart = new Chart(sCtx, { type:'doughnut', data:sData, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ position:'right', labels:{ font:{ size:12 } } } } } });
- 
+
   const ownerCounts = {};
   all.forEach(t => {
     const o = t.owner || '未指派';
@@ -860,7 +1113,7 @@ function renderCharts(all) {
   if (ownerChart) { ownerChart.data = oData; ownerChart.update(); }
   else ownerChart = new Chart(oCtx, { type:'bar', data:oData, options:{ responsive:true, maintainAspectRatio:false, scales:{ x:{ stacked:true }, y:{ stacked:true, ticks:{ stepSize:1 } } }, plugins:{ legend:{ position:'bottom', labels:{ font:{ size:11 } } } } } });
 }
- 
+
 document.querySelectorAll('.modal-overlay').forEach(o => {
   o.addEventListener('click', e => { if (e.target === o) o.classList.remove('active'); });
 });
