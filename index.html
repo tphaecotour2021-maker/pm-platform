@@ -275,7 +275,7 @@ body {
 }
 .daily-row {
   display: grid;
-  grid-template-columns: 80px 1fr auto auto auto;
+  grid-template-columns: 92px 92px 1fr auto auto;
   gap: 12px;
   padding: 12px 14px;
   align-items: center;
@@ -284,6 +284,26 @@ body {
 }
 .daily-row:last-child { border-bottom: none; }
 .daily-row:hover { background: #fafafa; }
+.daily-date {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.daily-date-main { font-size: 13px; font-weight: 600; color: #111827; }
+.daily-date-sub { font-size: 11px; color: #9ca3af; }
+.daily-date.today .daily-date-main { color: #4f46e5; }
+.daily-date.overdue .daily-date-main { color: #dc2626; }
+.daily-owner {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.daily-owner.unassigned { color: #9ca3af; font-weight: 500; }
 .daily-task-title { font-weight: 500; color: #111827; }
 .daily-task-deliverable { font-size: 11px; color: #6b7280; margin-top: 2px; }
 .project-pill {
@@ -297,8 +317,7 @@ body {
 .project-pill .dot {
   width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
 }
-.daily-owner { font-size: 12px; color: #6b7280; min-width: 60px; }
-.daily-deadline-text { font-size: 11px; color: #9ca3af; }
+.daily-status { justify-self: end; }
 
 .modal-overlay {
   position: fixed; inset: 0;
@@ -381,12 +400,15 @@ body {
   .charts-row { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
   .tasks-table { font-size: 12px; }
-  .daily-row { grid-template-columns: 70px 1fr; gap: 8px; }
+  .daily-row { grid-template-columns: 76px 1fr auto; gap: 8px; }
+  .daily-date { grid-row: span 2; }
+  .daily-owner { grid-column: 2; }
+  .daily-task { grid-column: 2 / 4; }
   .daily-row > .project-pill,
-  .daily-row > .daily-owner,
-  .daily-row > .daily-deadline-text {
+  .daily-row > .daily-status {
     grid-column: 2; margin-top: 4px;
   }
+  .daily-status { justify-self: start; }
 }
 </style>
 </head>
@@ -830,6 +852,22 @@ function dayDiff(deadlineStr) {
 function weekday(d) {
   return ['週日','週一','週二','週三','週四','週五','週六'][d.getDay()];
 }
+function formatDateShort(dateStr) {
+  if (!dateStr) return '未排程';
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+function relativeDateText(dateStr) {
+  if (!dateStr) return '沒有截止日';
+  const diff = dayDiff(dateStr);
+  const d = new Date(dateStr + 'T00:00:00');
+  if (diff === 0) return `今天 ${weekday(d)}`;
+  if (diff === 1) return `明天 ${weekday(d)}`;
+  if (diff === -1) return `昨天 ${weekday(d)}`;
+  if (diff < 0) return `逾期 ${-diff} 天`;
+  if (diff <= 7) return `${diff} 天後 ${weekday(d)}`;
+  return weekday(d);
+}
 
 window.render = function() {
   const all = state.tasks;
@@ -936,7 +974,7 @@ function renderTask(projectId, t) {
         ${t.notes ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${escapeHtml(t.notes)}</div>` : ''}
       </td>
       <td>${t.owner ? escapeHtml(t.owner) : '<span style="color:#9ca3af">—</span>'}</td>
-      <td class="${overdueClass}">${t.deadline || '<span style="color:#9ca3af">—</span>'}</td>
+      <td class="${overdueClass}">${t.deadline ? `${formatDateShort(t.deadline)} <span style="color:#9ca3af;font-size:11px">${relativeDateText(t.deadline)}</span>` : '<span style="color:#9ca3af">—</span>'}</td>
       <td>${t.deliverable ? escapeHtml(t.deliverable) : '<span style="color:#9ca3af">—</span>'}</td>
       <td><span class="priority-badge priority-${t.priority}">${priorityLabel(t.priority)}</span></td>
       <td>
@@ -1024,7 +1062,7 @@ window.renderDaily = function() {
   }
 
   let html = '';
-  for (const key of ['overdue','today','tomorrow','thisWeek','nextWeek','later','noDate']) {
+  for (const key of ['today','overdue','tomorrow','thisWeek','nextWeek','later','noDate']) {
     const g = groups[key];
     if (g.tasks.length === 0) continue;
 
@@ -1054,30 +1092,24 @@ window.renderDaily = function() {
 
 function renderDailyRow(t) {
   const p = t._project;
-  const overdueClass = isOverdue(t) ? 'deadline-overdue' : (isSoon(t) ? 'deadline-soon' : '');
-  let dateText = '—';
-  if (t.deadline) {
-    const diff = dayDiff(t.deadline);
-    const d = new Date(t.deadline + 'T00:00:00');
-    if (diff === 0) dateText = '今天';
-    else if (diff === 1) dateText = '明天';
-    else if (diff === -1) dateText = '昨天';
-    else if (diff < 0) dateText = `逾期 ${-diff} 天`;
-    else if (diff <= 7) dateText = `${diff} 天後 (${weekday(d)})`;
-    else dateText = `${d.getMonth()+1}/${d.getDate()}`;
-  }
+  const diff = dayDiff(t.deadline);
+  const dateClass = diff === 0 ? 'today' : (isOverdue(t) ? 'overdue' : '');
+  const ownerText = t.owner ? escapeHtml(t.owner) : '未指派';
   return `
     <div class="daily-row" onclick="openTaskModal('${p.id}','${t.id}')">
-      <span class="status-badge status-${t.status}" style="cursor:pointer" onclick="event.stopPropagation();quickToggleStatus('${t.id}')" title="點擊切換">${statusLabel(t.status)}</span>
-      <div>
+      <div class="daily-date ${dateClass}">
+        <div class="daily-date-main">${formatDateShort(t.deadline)}</div>
+        <div class="daily-date-sub">${relativeDateText(t.deadline)}</div>
+      </div>
+      <div class="daily-owner ${t.owner ? '' : 'unassigned'}" title="${ownerText}">${ownerText}</div>
+      <div class="daily-task">
         <div class="daily-task-title">${escapeHtml(t.title)}</div>
         ${t.deliverable ? `<div class="daily-task-deliverable">📦 ${escapeHtml(t.deliverable)}</div>` : ''}
       </div>
       <div class="project-pill" title="${escapeHtml(p.name)}">
         <span class="dot" style="background:${p.color}"></span>${escapeHtml(p.name)}
       </div>
-      <div class="daily-owner">${t.owner ? '👤 ' + escapeHtml(t.owner) : '<span style="color:#d1d5db">未指派</span>'}</div>
-      <div class="daily-deadline-text ${overdueClass}">${dateText}</div>
+      <span class="daily-status status-badge status-${t.status}" style="cursor:pointer" onclick="event.stopPropagation();quickToggleStatus('${t.id}')" title="點擊切換">${statusLabel(t.status)}</span>
     </div>
   `;
 }
