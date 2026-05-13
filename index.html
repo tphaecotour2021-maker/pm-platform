@@ -178,12 +178,27 @@ body {
   margin-bottom: 12px;
   overflow: hidden;
 }
+.project-month-group { margin-bottom: 22px; }
+.project-month-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 4px 10px;
+}
+.project-month-title { font-size: 18px; font-weight: 700; color: #111827; }
+.project-month-count {
+  background: #e5e7eb;
+  color: #4b5563;
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 12px;
+  font-weight: 700;
+}
 .project-header {
   padding: 14px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  cursor: pointer;
   border-left: 4px solid var(--project-color, #4f46e5);
 }
 .project-header:hover { background: #fafafa; }
@@ -376,6 +391,119 @@ body {
 }
 .unscheduled-title { font-size: 14px; font-weight: 700; color: #374151; margin-bottom: 10px; }
 .unscheduled-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+.view-switch {
+  display: inline-flex;
+  gap: 4px;
+  background: #eef2f7;
+  padding: 4px;
+  border-radius: 12px;
+}
+.view-switch button {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  border-radius: 9px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.view-switch button.active {
+  background: #3b82f6;
+  color: white;
+  box-shadow: 0 1px 3px rgba(59,130,246,0.22);
+}
+.daily-list {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.daily-list-card {
+  display: grid;
+  grid-template-columns: 34px 1fr 24px;
+  gap: 12px;
+  align-items: center;
+  background: #f8fbff;
+  border: 1px solid #eef2f7;
+  border-radius: 8px;
+  padding: 18px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.03);
+}
+.daily-list-card:hover { border-color: #bfdbfe; }
+.daily-check-circle {
+  width: 26px;
+  height: 26px;
+  border: 2px solid #9ca3af;
+  border-radius: 50%;
+}
+.daily-list-card.done { opacity: 0.62; }
+.daily-list-card.done .daily-check-circle { background: #10b981; border-color: #10b981; box-shadow: inset 0 0 0 5px #f8fbff; }
+.daily-list-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.35;
+}
+.daily-list-card.done .daily-list-title { text-decoration: line-through; color: #6b7280; }
+.daily-list-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #64748b;
+}
+.daily-list-date { color: #ef4444; font-weight: 700; }
+.daily-flag { color: #cbd5e1; font-size: 22px; }
+.monthly-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(112px, 1fr));
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.monthly-cell {
+  min-height: 132px;
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 8px;
+}
+.monthly-cell:nth-child(7n) { border-right: none; }
+.monthly-cell.outside { background: #f9fafb; color: #cbd5e1; }
+.monthly-number {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+.monthly-cell.today .monthly-number span {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  background: #ef4444;
+  color: white;
+}
+.monthly-task {
+  font-size: 11px;
+  line-height: 1.35;
+  color: #111827;
+  background: #eff6ff;
+  border-radius: 5px;
+  padding: 4px 5px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.monthly-more { font-size: 11px; color: #94a3b8; margin-top: 4px; }
 .project-pill {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 8px; border-radius: 12px;
@@ -488,6 +616,10 @@ body {
   .tasks-table { font-size: 12px; }
   .weekly-toolbar { align-items: flex-start; flex-direction: column; }
   .weekly-grid { grid-template-columns: 1fr; }
+  .monthly-grid { grid-template-columns: 1fr; }
+  .monthly-cell { min-height: 96px; border-right: none; }
+  .view-switch { width: 100%; }
+  .view-switch button { flex: 1; }
   .weekly-day {
     min-height: 120px;
     border-right: none;
@@ -553,39 +685,13 @@ body {
 
     <!-- Projects view -->
     <div id="viewProjects">
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label">專案總數</div><div class="stat-value indigo" id="statProjects">0</div></div>
-        <div class="stat-card"><div class="stat-label">任務總數</div><div class="stat-value" id="statTasks">0</div></div>
-        <div class="stat-card"><div class="stat-label">完成率</div><div class="stat-value success" id="statCompletion">0%</div></div>
-        <div class="stat-card"><div class="stat-label">逾期任務</div><div class="stat-value danger" id="statOverdue">0</div></div>
-      </div>
-
-      <div class="charts-row">
-        <div class="chart-card">
-          <div class="chart-title">任務狀態分佈</div>
-          <div class="chart-wrapper"><canvas id="statusChart"></canvas></div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-title">負責人工作量</div>
-          <div class="chart-wrapper"><canvas id="ownerChart"></canvas></div>
-        </div>
-      </div>
-
       <div class="filter-bar">
-        <input type="text" id="searchInput" placeholder="🔍 搜尋專案、任務、負責人、產出..." oninput="render()">
+        <input type="text" id="searchInput" placeholder="🔍 搜尋專案..." oninput="render()">
         <select id="filterProjectCategory" onchange="render()">
           <option value="active">進行中的專案</option>
           <option value="completed">已完成的專案</option>
           <option value="">全部分類</option>
         </select>
-        <select id="filterStatus" onchange="render()">
-          <option value="">全部狀態</option>
-          <option value="todo">待辦</option>
-          <option value="doing">進行中</option>
-          <option value="done">完成</option>
-        </select>
-        <select id="filterOwner" onchange="render()"><option value="">全部負責人</option></select>
-        <select id="filterProject" onchange="render()"><option value="">全部專案</option></select>
       </div>
 
       <div id="projectsContainer"></div>
@@ -595,6 +701,11 @@ body {
     <div id="viewDaily" style="display:none">
       <div class="filter-bar">
         <button class="btn btn-secondary" onclick="openDailyTaskModal()">＋ 新增任務</button>
+        <div class="view-switch">
+          <button id="dailyModeDay" onclick="setTaskMode('day')">每日</button>
+          <button id="dailyModeWeek" onclick="setTaskMode('week')">每週</button>
+          <button id="dailyModeMonth" onclick="setTaskMode('month')">每月</button>
+        </div>
         <select id="dailyFilterOwner" onchange="renderDaily()" style="flex:1">
           <option value="">👥 全部負責人的任務</option>
         </select>
@@ -630,6 +741,10 @@ body {
         <option value="active">進行中</option>
         <option value="completed">已完成</option>
       </select>
+    </div>
+    <div class="form-group">
+      <label>專案月份</label>
+      <input type="month" id="projectMonth">
     </div>
     <div class="form-group">
       <label>顏色標記</label>
@@ -739,7 +854,10 @@ let state = {
   tasks: [],
   collapsed: JSON.parse(localStorage.getItem('pm_collapsed') || '{}'),
   view: localStorage.getItem('pm_view') || 'projects',
-  weeklyStart: null
+  taskMode: localStorage.getItem('pm_task_mode') || 'week',
+  dailyDate: null,
+  weeklyStart: null,
+  monthlyDate: null
 };
 let unsubProjects = null, unsubTasks = null;
 
@@ -815,12 +933,14 @@ window.openProjectModal = (id) => {
     document.getElementById('projectName').value = p.name;
     document.getElementById('projectDesc').value = p.desc || '';
     document.getElementById('projectCategory').value = projectCategory(p);
+    document.getElementById('projectMonth').value = projectMonthKey(p);
     document.getElementById('projectColor').value = p.color || '#4f46e5';
   } else {
     document.getElementById('projectModalTitle').textContent = '新增專案';
     document.getElementById('projectName').value = '';
     document.getElementById('projectDesc').value = '';
     document.getElementById('projectCategory').value = 'active';
+    document.getElementById('projectMonth').value = currentMonthKey();
     document.getElementById('projectColor').value = '#4f46e5';
   }
   document.getElementById('projectModal').classList.add('active');
@@ -834,6 +954,7 @@ window.saveProject = async () => {
     name,
     desc: document.getElementById('projectDesc').value.trim(),
     category: document.getElementById('projectCategory').value,
+    month: document.getElementById('projectMonth').value || currentMonthKey(),
     color: document.getElementById('projectColor').value,
     updatedAt: serverTimestamp(),
     updatedBy: auth.currentUser.email
@@ -964,6 +1085,25 @@ function statusLabel(s) { return {todo:'待辦', doing:'進行中', done:'完成
 function priorityLabel(p) { return {high:'高', mid:'中', low:'低'}[p] || p; }
 function projectCategory(p) { return p.category || 'active'; }
 function projectCategoryLabel(category) { return category === 'completed' ? '已完成' : '進行中'; }
+function currentMonthKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+function timestampToDate(value) {
+  if (!value) return null;
+  if (typeof value.toDate === 'function') return value.toDate();
+  if (value.seconds) return new Date(value.seconds * 1000);
+  return null;
+}
+function projectMonthKey(p) {
+  if (p.month) return p.month;
+  const d = timestampToDate(p.createdAt) || timestampToDate(p.updatedAt) || new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+function projectMonthLabel(monthKey) {
+  const [year, month] = monthKey.split('-');
+  return `${year} 年 ${Number(month)} 月`;
+}
 function isOverdue(t) {
   if (!t.deadline || t.status === 'done') return false;
   return new Date(t.deadline) < new Date(new Date().toDateString());
@@ -1016,6 +1156,11 @@ function addDays(d, days) {
   next.setDate(next.getDate() + days);
   return next;
 }
+function addMonths(d, months) {
+  const next = new Date(d);
+  next.setMonth(next.getMonth() + months);
+  return next;
+}
 function formatFullDate(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr + 'T00:00:00');
@@ -1026,48 +1171,19 @@ function monthTitle(d) {
 }
 
 window.render = function() {
-  const all = state.tasks;
-  const completedProjects = state.projects.filter(p => projectCategory(p) === 'completed').length;
-  document.getElementById('statProjects').textContent = `${state.projects.length} / 完成 ${completedProjects}`;
-  document.getElementById('statTasks').textContent = all.length;
-  const done = all.filter(t => t.status === 'done').length;
-  document.getElementById('statCompletion').textContent = all.length ? Math.round(done / all.length * 100) + '%' : '0%';
-  document.getElementById('statOverdue').textContent = all.filter(isOverdue).length;
-
-  const ownerSel = document.getElementById('filterOwner');
-  const cur1 = ownerSel.value;
-  ownerSel.innerHTML = '<option value="">全部負責人</option>' + getAllOwners().map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('');
-  ownerSel.value = cur1;
-
-  const projSel = document.getElementById('filterProject');
-  const cur2 = projSel.value;
-  projSel.innerHTML = '<option value="">全部專案</option>' + state.projects.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
-  projSel.value = cur2;
-
   const q = document.getElementById('searchInput').value.toLowerCase().trim();
   const fProjectCategory = document.getElementById('filterProjectCategory').value;
-  const fStatus = document.getElementById('filterStatus').value;
-  const fOwner = document.getElementById('filterOwner').value;
-  const fProject = document.getElementById('filterProject').value;
 
   const filtered = state.projects
     .filter(p => !fProjectCategory || projectCategory(p) === fProjectCategory)
-    .filter(p => !fProject || p.id === fProject)
     .map(p => {
-      const tasks = tasksOf(p.id).filter(t => {
-        if (fStatus && t.status !== fStatus) return false;
-        if (fOwner && t.owner !== fOwner) return false;
-        if (q) {
-          const text = [p.name, t.title, t.owner, t.deliverable, t.notes].join(' ').toLowerCase();
-          if (!text.includes(q)) return false;
-        }
-        return true;
-      });
+      const tasks = tasksOf(p.id);
       return { ...p, tasks };
     })
     .filter(p => {
-      if (!q && !fStatus && !fOwner) return true;
-      return p.tasks.length > 0 || (q && p.name.toLowerCase().includes(q));
+      if (!q) return true;
+      const text = [p.name, p.desc].join(' ').toLowerCase();
+      return text.includes(q);
     });
 
   const container = document.getElementById('projectsContainer');
@@ -1083,10 +1199,31 @@ window.render = function() {
       <div>沒有符合條件的結果</div>
     </div>`;
   } else {
-    container.innerHTML = filtered.map(p => renderProject(p)).join('');
+    container.innerHTML = renderProjectsByMonth(filtered);
   }
-  renderCharts(all);
 };
+
+function renderProjectsByMonth(projects) {
+  const groups = {};
+  projects.forEach(p => {
+    const key = projectMonthKey(p);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(p);
+  });
+  return Object.keys(groups)
+    .sort((a, b) => b.localeCompare(a))
+    .map(month => {
+      const items = groups[month].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'zh-Hant'));
+      return `<section class="project-month-group">
+        <div class="project-month-header">
+          <span class="project-month-title">${projectMonthLabel(month)}</span>
+          <span class="project-month-count">${items.length}</span>
+        </div>
+        ${items.map(p => renderProject(p)).join('')}
+      </section>`;
+    })
+    .join('');
+}
 
 function renderProject(p) {
   const total = p.tasks.length;
@@ -1098,10 +1235,10 @@ function renderProject(p) {
   const toggleCategoryLabel = category === 'completed' ? '恢復進行中' : '移到已完成';
   return `
     <div class="project-card ${collapsed}" id="proj-${p.id}" style="--project-color:${p.color}">
-      <div class="project-header" onclick="toggleProject('${p.id}')">
+      <div class="project-header">
         <div class="project-info">
           <div class="project-name">
-            <span class="toggle-icon">▼</span> ${escapeHtml(p.name)}
+            ${escapeHtml(p.name)}
             <span class="status-badge status-${category === 'completed' ? 'completed' : 'active'}">${categoryLabel}</span>
           </div>
           <div class="project-meta">
@@ -1115,18 +1252,6 @@ function renderProject(p) {
           <button class="btn btn-ghost btn-sm" onclick="openProjectModal('${p.id}')">編輯</button>
           <button class="btn btn-ghost btn-sm" onclick="deleteProject('${p.id}')" style="color:#dc2626">刪除</button>
         </div>
-      </div>
-      <div class="tasks-container">
-        ${p.tasks.length === 0
-          ? `<div class="empty-tasks">尚無任務 — 點擊「＋ 任務」新增</div>`
-          : `<table class="tasks-table">
-              <thead><tr>
-                <th style="width:80px">狀態</th><th>任務</th><th>負責人</th>
-                <th>截止日</th><th>產出</th><th>優先級</th><th style="width:100px">操作</th>
-              </tr></thead>
-              <tbody>${p.tasks.map(t => renderTask(p.id, t)).join('')}</tbody>
-            </table>`
-        }
       </div>
     </div>`;
 }
@@ -1159,8 +1284,35 @@ window.goTodayWeek = () => {
   state.weeklyStart = startOfWeek();
   renderDaily();
 };
+window.setTaskMode = (mode) => {
+  state.taskMode = mode;
+  localStorage.setItem('pm_task_mode', mode);
+  renderDaily();
+};
+window.shiftDay = (days) => {
+  const current = state.dailyDate || new Date();
+  state.dailyDate = addDays(current, days);
+  renderDaily();
+};
+window.goTodayDay = () => {
+  state.dailyDate = new Date();
+  renderDaily();
+};
+window.shiftMonth = (months) => {
+  const current = state.monthlyDate || new Date();
+  state.monthlyDate = addMonths(current, months);
+  renderDaily();
+};
+window.goTodayMonth = () => {
+  state.monthlyDate = new Date();
+  renderDaily();
+};
 
 window.renderDaily = function() {
+  document.getElementById('dailyModeDay').classList.toggle('active', state.taskMode === 'day');
+  document.getElementById('dailyModeWeek').classList.toggle('active', state.taskMode === 'week');
+  document.getElementById('dailyModeMonth').classList.toggle('active', state.taskMode === 'month');
+
   const ownerSel = document.getElementById('dailyFilterOwner');
   const cur = ownerSel.value;
   ownerSel.innerHTML = '<option value="">👥 全部負責人的任務</option>' +
@@ -1189,8 +1341,6 @@ window.renderDaily = function() {
   const sortTasks = (tasks) => tasks.sort((a, b) => (prioOrder[a.priority]||1) - (prioOrder[b.priority]||1) || a.title.localeCompare(b.title, 'zh-Hant'));
 
   const container = document.getElementById('dailyContainer');
-  const totalTasks = filtered.length;
-
   if (state.projects.length === 0) {
     container.innerHTML = `<div class="empty-state">
       <div class="icon">📂</div>
@@ -1200,15 +1350,40 @@ window.renderDaily = function() {
     return;
   }
 
-  if (totalTasks === 0) {
-    const owner = fOwner ? `${fOwner} ` : '';
-    container.innerHTML = `<div class="empty-state">
-      <div class="icon">🎉</div>
-      <div>${owner}沒有任務需要處理</div>
-    </div>`;
+  if (state.taskMode === 'day') {
+    renderDayMode(container, filtered, sortTasks);
     return;
   }
+  if (state.taskMode === 'month') {
+    renderMonthMode(container, filtered, sortTasks);
+    return;
+  }
+  renderWeekMode(container, filtered, sortTasks);
+};
 
+function renderDayMode(container, filtered, sortTasks) {
+  const selectedDate = state.dailyDate || new Date();
+  state.dailyDate = selectedDate;
+  const selectedKey = dateKey(selectedDate);
+  const dayTasks = sortTasks(filtered.filter(t => t.deadline === selectedKey));
+  const title = dayDiff(selectedKey) === 0 ? '今天' : `${formatDateShort(selectedKey)} ${weekday(selectedDate)}`;
+
+  container.innerHTML = `
+    <div class="weekly-toolbar">
+      <div class="weekly-title">${title}</div>
+      <div class="weekly-nav">
+        <button class="weekly-nav-btn" onclick="shiftDay(-1)">‹</button>
+        <button class="weekly-nav-btn" onclick="goTodayDay()">Today</button>
+        <button class="weekly-nav-btn" onclick="shiftDay(1)">›</button>
+      </div>
+    </div>
+    <div class="daily-list">
+      ${dayTasks.length ? dayTasks.map(t => renderDailyListTask(t)).join('') : `<div class="empty-state"><div class="icon">✓</div><div>這天沒有任務</div></div>`}
+    </div>
+  `;
+}
+
+function renderWeekMode(container, filtered, sortTasks) {
   const weekStart = state.weeklyStart || startOfWeek();
   state.weeklyStart = weekStart;
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -1250,7 +1425,50 @@ window.renderDaily = function() {
       <div class="unscheduled-grid">${unscheduled.map(t => renderWeeklyTask(t)).join('')}</div>
     </div>` : ''}
   `;
-};
+}
+
+function renderMonthMode(container, filtered, sortTasks) {
+  const monthDate = state.monthlyDate || new Date();
+  state.monthlyDate = monthDate;
+  const first = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+  const gridStart = startOfWeek(first);
+  const todayKey = dateKey(new Date());
+  const month = monthDate.getMonth();
+  const cells = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
+  const byDate = {};
+  filtered.forEach(t => {
+    if (!t.deadline) return;
+    if (!byDate[t.deadline]) byDate[t.deadline] = [];
+    byDate[t.deadline].push(t);
+  });
+  Object.values(byDate).forEach(sortTasks);
+
+  const gridHtml = cells.map(d => {
+    const key = dateKey(d);
+    const tasks = byDate[key] || [];
+    const visible = tasks.slice(0, 3);
+    return `<div class="monthly-cell ${d.getMonth() === month ? '' : 'outside'} ${key === todayKey ? 'today' : ''}">
+      <div class="monthly-number"><span>${d.getDate()}</span></div>
+      ${visible.map(t => `<div class="monthly-task" onclick="openTaskModal('${t._project.id}','${t.id}')" title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</div>`).join('')}
+      ${tasks.length > 3 ? `<div class="monthly-more">+${tasks.length - 3} 更多</div>` : ''}
+    </div>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div class="weekly-toolbar">
+      <div class="weekly-title">${monthTitle(monthDate)}</div>
+      <div class="weekly-nav">
+        <button class="weekly-nav-btn" onclick="shiftMonth(-1)">‹</button>
+        <button class="weekly-nav-btn" onclick="goTodayMonth()">Today</button>
+        <button class="weekly-nav-btn" onclick="shiftMonth(1)">›</button>
+      </div>
+    </div>
+    <div class="weekly-day-name" style="display:grid;grid-template-columns:repeat(7,1fr);gap:0;margin-bottom:6px">
+      <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+    </div>
+    <div class="monthly-grid">${gridHtml}</div>
+  `;
+}
 
 function renderWeeklyTask(t) {
   const p = t._project;
@@ -1266,6 +1484,27 @@ function renderWeeklyTask(t) {
         <span class="weekly-done-box"></span>
         <span>Done</span>
       </div>
+    </div>
+  `;
+}
+
+function renderDailyListTask(t) {
+  const p = t._project;
+  const ownerText = t.owner ? escapeHtml(t.owner) : '未指派';
+  const done = t.status === 'done';
+  return `
+    <div class="daily-list-card ${done ? 'done' : ''}" onclick="openTaskModal('${p.id}','${t.id}')">
+      <div class="daily-check-circle" onclick="event.stopPropagation();quickToggleStatus('${t.id}')" title="切換完成"></div>
+      <div>
+        <div class="daily-list-title">${escapeHtml(t.title)}</div>
+        <div class="daily-list-meta">
+          <span>${ownerText}</span>
+          ${t.deadline ? `<span class="daily-list-date">${formatDateShort(t.deadline)}</span>` : ''}
+          <span>${escapeHtml(p.name)}</span>
+          ${t.deliverable ? `<span>${escapeHtml(t.deliverable)}</span>` : ''}
+        </div>
+      </div>
+      <div class="daily-flag">⚐</div>
     </div>
   `;
 }
