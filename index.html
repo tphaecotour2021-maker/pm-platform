@@ -199,6 +199,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  cursor: pointer;
   border-left: 4px solid var(--project-color, #4f46e5);
 }
 .project-header:hover { background: #fafafa; }
@@ -220,6 +221,31 @@ body {
   border-top: 1px solid #f3f4f6;
   padding: 8px 16px 16px;
 }
+.project-task-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 10px;
+}
+.project-view-switch {
+  display: inline-flex;
+  gap: 4px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 3px;
+}
+.project-view-switch button {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #6b7280;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.project-view-switch button.active { background: white; color: #111827; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
 .tasks-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
 .tasks-table th {
   text-align: left;
@@ -234,6 +260,58 @@ body {
 .tasks-table td { padding: 10px 6px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
 .tasks-table tr:last-child td { border-bottom: none; }
 .tasks-table tr:hover { background: #fafafa; }
+.dependency-pill {
+  display: inline-block;
+  background: #eef2ff;
+  color: #3730a3;
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.parallel-pill { background: #ecfdf5; color: #047857; }
+.gantt-wrap {
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+}
+.gantt-header, .gantt-row {
+  display: grid;
+  grid-template-columns: 190px minmax(520px, 1fr) 150px;
+  gap: 10px;
+  align-items: center;
+  min-width: 860px;
+}
+.gantt-header {
+  padding: 8px 10px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 700;
+}
+.gantt-row { padding: 10px; border-bottom: 1px solid #f3f4f6; }
+.gantt-row:last-child { border-bottom: none; }
+.gantt-task-name { font-size: 12px; font-weight: 700; color: #111827; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gantt-track {
+  position: relative;
+  height: 28px;
+  background: repeating-linear-gradient(to right, #f8fafc 0, #f8fafc var(--day-width), #e5e7eb calc(var(--day-width) + 1px), #f8fafc calc(var(--day-width) + 2px));
+  border-radius: 6px;
+}
+.gantt-bar {
+  position: absolute;
+  top: 5px;
+  left: var(--bar-left);
+  width: var(--bar-width);
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--project-color, #4f46e5);
+}
+.gantt-bar.done { background: #10b981; opacity: 0.7; }
+.gantt-relation { font-size: 11px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .status-badge, .priority-badge {
   display: inline-block;
@@ -776,13 +854,25 @@ body {
     </div>
     <div class="form-row">
       <div class="form-group">
+        <label>開始日期</label>
+        <input type="date" id="taskStartDate">
+      </div>
+      <div class="form-group">
+        <label>截止日期</label>
+        <input type="date" id="taskDeadline">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
         <label>負責人</label>
         <input type="text" id="taskOwner" placeholder="姓名" list="ownersList">
         <datalist id="ownersList"></datalist>
       </div>
       <div class="form-group">
-        <label>截止日期</label>
-        <input type="date" id="taskDeadline">
+        <label>前置任務</label>
+        <select id="taskDependsOn">
+          <option value="">無，可平行進行</option>
+        </select>
       </div>
     </div>
     <div class="form-row">
@@ -853,6 +943,7 @@ let state = {
   projects: [],
   tasks: [],
   collapsed: JSON.parse(localStorage.getItem('pm_collapsed') || '{}'),
+  projectTaskViews: JSON.parse(localStorage.getItem('pm_project_task_views') || '{}'),
   view: localStorage.getItem('pm_view') || 'projects',
   taskMode: localStorage.getItem('pm_task_mode') || 'week',
   dailyDate: null,
@@ -991,23 +1082,31 @@ window.toggleProjectCategory = async (id) => {
     toast(next === 'completed' ? '已移到已完成專案' : '已恢復為進行中專案');
   } catch(e) { toast('更新分類失敗：' + e.message); }
 };
+window.setProjectTaskView = (projectId, mode) => {
+  state.projectTaskViews[projectId] = mode;
+  localStorage.setItem('pm_project_task_views', JSON.stringify(state.projectTaskViews));
+  render();
+};
 window.openTaskModal = (projectId, taskId) => {
   document.getElementById('taskProjectId').value = projectId;
   document.getElementById('taskId').value = taskId || '';
   refreshOwnersList();
+  refreshTaskDependencies(projectId, taskId || '');
   if (taskId) {
     const t = state.tasks.find(x => x.id === taskId);
     document.getElementById('taskModalTitle').textContent = '編輯任務';
     document.getElementById('taskTitle').value = t.title;
     document.getElementById('taskOwner').value = t.owner || '';
+    document.getElementById('taskStartDate').value = t.startDate || '';
     document.getElementById('taskDeadline').value = t.deadline || '';
+    document.getElementById('taskDependsOn').value = t.dependsOn || '';
     document.getElementById('taskStatus').value = t.status || 'todo';
     document.getElementById('taskPriority').value = t.priority || 'mid';
     document.getElementById('taskDeliverable').value = t.deliverable || '';
     document.getElementById('taskNotes').value = t.notes || '';
   } else {
     document.getElementById('taskModalTitle').textContent = '新增任務';
-    ['taskTitle','taskOwner','taskDeadline','taskDeliverable','taskNotes'].forEach(i => document.getElementById(i).value = '');
+    ['taskTitle','taskOwner','taskStartDate','taskDeadline','taskDependsOn','taskDeliverable','taskNotes'].forEach(i => document.getElementById(i).value = '');
     document.getElementById('taskStatus').value = 'todo';
     document.getElementById('taskPriority').value = 'mid';
   }
@@ -1028,7 +1127,9 @@ window.saveTask = async () => {
     projectId,
     title,
     owner: document.getElementById('taskOwner').value.trim(),
+    startDate: document.getElementById('taskStartDate').value,
     deadline: document.getElementById('taskDeadline').value,
+    dependsOn: document.getElementById('taskDependsOn').value,
     status: document.getElementById('taskStatus').value,
     priority: document.getElementById('taskPriority').value,
     deliverable: document.getElementById('taskDeliverable').value.trim(),
@@ -1077,6 +1178,14 @@ function getAllOwners() {
 function refreshOwnersList() {
   document.getElementById('ownersList').innerHTML = getAllOwners().map(o => `<option value="${escapeHtml(o)}">`).join('');
 }
+function refreshTaskDependencies(projectId, taskId = '') {
+  const select = document.getElementById('taskDependsOn');
+  const tasks = tasksOf(projectId)
+    .filter(t => t.id !== taskId)
+    .sort((a, b) => compareTaskDates(a, b));
+  select.innerHTML = '<option value="">無，可平行進行</option>' +
+    tasks.map(t => `<option value="${t.id}">${escapeHtml(t.title)}</option>`).join('');
+}
 function escapeHtml(s) {
   if (!s) return '';
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1103,6 +1212,19 @@ function projectMonthKey(p) {
 function projectMonthLabel(monthKey) {
   const [year, month] = monthKey.split('-');
   return `${year} 年 ${Number(month)} 月`;
+}
+function taskStart(t) { return t.startDate || t.deadline || ''; }
+function taskEnd(t) { return t.deadline || t.startDate || ''; }
+function compareTaskDates(a, b) {
+  const aDate = taskStart(a) || '9999-12-31';
+  const bDate = taskStart(b) || '9999-12-31';
+  if (aDate !== bDate) return aDate < bDate ? -1 : 1;
+  return (a.title || '').localeCompare(b.title || '', 'zh-Hant');
+}
+function taskByIdMap(tasks) {
+  const map = {};
+  tasks.forEach(t => { map[t.id] = t; });
+  return map;
 }
 function isOverdue(t) {
   if (!t.deadline || t.status === 'done') return false;
@@ -1233,12 +1355,13 @@ function renderProject(p) {
   const category = projectCategory(p);
   const categoryLabel = projectCategoryLabel(category);
   const toggleCategoryLabel = category === 'completed' ? '恢復進行中' : '移到已完成';
+  const taskView = state.projectTaskViews[p.id] || 'list';
   return `
     <div class="project-card ${collapsed}" id="proj-${p.id}" style="--project-color:${p.color}">
-      <div class="project-header">
+      <div class="project-header" onclick="toggleProject('${p.id}')">
         <div class="project-info">
           <div class="project-name">
-            ${escapeHtml(p.name)}
+            <span class="toggle-icon">▼</span> ${escapeHtml(p.name)}
             <span class="status-badge status-${category === 'completed' ? 'completed' : 'active'}">${categoryLabel}</span>
           </div>
           <div class="project-meta">
@@ -1253,10 +1376,43 @@ function renderProject(p) {
           <button class="btn btn-ghost btn-sm" onclick="deleteProject('${p.id}')" style="color:#dc2626">刪除</button>
         </div>
       </div>
+      <div class="tasks-container">
+        <div class="project-task-toolbar">
+          <div class="project-view-switch" onclick="event.stopPropagation()">
+            <button class="${taskView === 'list' ? 'active' : ''}" onclick="setProjectTaskView('${p.id}','list')">條列</button>
+            <button class="${taskView === 'gantt' ? 'active' : ''}" onclick="setProjectTaskView('${p.id}','gantt')">甘特圖</button>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="openTaskModal('${p.id}')">＋ 任務</button>
+        </div>
+        ${p.tasks.length === 0
+          ? `<div class="empty-tasks">尚無任務 — 點擊「＋ 任務」新增</div>`
+          : taskView === 'gantt' ? renderProjectGantt(p) : renderProjectTaskList(p)
+        }
+      </div>
     </div>`;
 }
-function renderTask(projectId, t) {
+
+function renderProjectTaskList(p) {
+  const sorted = [...p.tasks].sort(compareTaskDates);
+  return `<table class="tasks-table">
+    <thead><tr>
+      <th style="width:80px">狀態</th><th>任務</th><th>負責人</th>
+      <th>時間</th><th>關係</th><th>產出</th><th style="width:100px">操作</th>
+    </tr></thead>
+    <tbody>${sorted.map(t => renderTask(p.id, t, p.tasks)).join('')}</tbody>
+  </table>`;
+}
+
+function renderTask(projectId, t, projectTasks = []) {
   const overdueClass = isOverdue(t) ? 'deadline-overdue' : (isSoon(t) ? 'deadline-soon' : '');
+  const map = taskByIdMap(projectTasks);
+  const parent = t.dependsOn ? map[t.dependsOn] : null;
+  const relation = parent
+    ? `<span class="dependency-pill">接續：${escapeHtml(parent.title)}</span>`
+    : `<span class="dependency-pill parallel-pill">可平行</span>`;
+  const timeText = taskStart(t) || taskEnd(t)
+    ? `${taskStart(t) ? formatDateShort(taskStart(t)) : '未定'} → ${taskEnd(t) ? formatDateShort(taskEnd(t)) : '未定'}`
+    : '<span style="color:#9ca3af">未排程</span>';
   return `
     <tr>
       <td><span class="status-badge status-${t.status}" style="cursor:pointer" onclick="quickToggleStatus('${t.id}')" title="點擊切換">${statusLabel(t.status)}</span></td>
@@ -1265,14 +1421,51 @@ function renderTask(projectId, t) {
         ${t.notes ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${escapeHtml(t.notes)}</div>` : ''}
       </td>
       <td>${t.owner ? escapeHtml(t.owner) : '<span style="color:#9ca3af">—</span>'}</td>
-      <td class="${overdueClass}">${t.deadline ? `${formatDateShort(t.deadline)} <span style="color:#9ca3af;font-size:11px">${relativeDateText(t.deadline)}</span>` : '<span style="color:#9ca3af">—</span>'}</td>
+      <td class="${overdueClass}">${timeText}</td>
+      <td>${relation}</td>
       <td>${t.deliverable ? escapeHtml(t.deliverable) : '<span style="color:#9ca3af">—</span>'}</td>
-      <td><span class="priority-badge priority-${t.priority}">${priorityLabel(t.priority)}</span></td>
       <td>
         <button class="btn btn-ghost btn-sm" onclick="openTaskModal('${projectId}','${t.id}')">編輯</button>
         <button class="btn btn-ghost btn-sm" onclick="deleteTask('${t.id}')" style="color:#dc2626">×</button>
       </td>
     </tr>`;
+}
+
+function renderProjectGantt(p) {
+  const dated = [...p.tasks].filter(t => taskStart(t) || taskEnd(t)).sort(compareTaskDates);
+  if (dated.length === 0) {
+    return `<div class="empty-tasks">這個專案的任務還沒有開始或截止日期，先補日期就能顯示甘特圖</div>`;
+  }
+  const map = taskByIdMap(p.tasks);
+  const starts = dated.map(t => new Date((taskStart(t) || taskEnd(t)) + 'T00:00:00'));
+  const ends = dated.map(t => new Date((taskEnd(t) || taskStart(t)) + 'T00:00:00'));
+  const min = new Date(Math.min(...starts));
+  const max = new Date(Math.max(...ends));
+  const totalDays = Math.max(1, Math.round((max - min) / 86400000) + 1);
+  const dayWidth = 100 / totalDays;
+  const rows = dated.map(t => {
+    const start = new Date((taskStart(t) || taskEnd(t)) + 'T00:00:00');
+    const end = new Date((taskEnd(t) || taskStart(t)) + 'T00:00:00');
+    const offset = Math.max(0, Math.round((start - min) / 86400000));
+    const span = Math.max(1, Math.round((end - start) / 86400000) + 1);
+    const parent = t.dependsOn ? map[t.dependsOn] : null;
+    const relation = parent ? `接續：${escapeHtml(parent.title)}` : '可平行進行';
+    return `<div class="gantt-row" onclick="openTaskModal('${p.id}','${t.id}')">
+      <div class="gantt-task-name" title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</div>
+      <div class="gantt-track" style="--day-width:${dayWidth}%;--bar-left:${offset * dayWidth}%;--bar-width:${span * dayWidth}%">
+        <div class="gantt-bar ${t.status === 'done' ? 'done' : ''}"></div>
+      </div>
+      <div class="gantt-relation" title="${relation}">${relation}</div>
+    </div>`;
+  }).join('');
+  return `<div class="gantt-wrap">
+    <div class="gantt-header">
+      <div>任務</div>
+      <div>${formatDateShort(dateKey(min))} → ${formatDateShort(dateKey(max))}</div>
+      <div>關係</div>
+    </div>
+    ${rows}
+  </div>`;
 }
 
 window.shiftWeek = (days) => {
