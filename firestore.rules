@@ -1,0 +1,39 @@
+// =============================================================
+// Firestore 安全規則
+// =============================================================
+// 用法：
+//   1. 到 Firebase Console → Firestore Database → 規則
+//   2. 把下面整段複製貼上，然後點「發佈」
+// =============================================================
+//
+// 預設：任何已登入的 Google 帳號都能讀寫 projects 與 tasks
+// 若要限制團隊成員，把下面的 isTeamMember() 改為白名單比對
+// =============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // 若要限制成員，把 isSignedIn() 換成 isTeamMember()
+    // 並修改下方的 email 名單
+    function isTeamMember() {
+      return isSignedIn() && request.auth.token.email in [
+        'alice@example.com',
+        'bob@example.com',
+        'charlie@example.com'
+      ];
+    }
+
+    match /projects/{projectId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /tasks/{taskId} {
+      allow read, write: if isSignedIn();
+    }
+  }
+}

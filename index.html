@@ -251,63 +251,131 @@ body {
 .empty-state .hint { font-size: 13px; margin-top: 4px; }
 .empty-tasks { text-align: center; padding: 16px; color: #9ca3af; font-size: 12px; font-style: italic; }
 
-/* Daily view */
-.daily-group { margin-bottom: 20px; }
-.daily-group-header {
-  display: flex; align-items: center; gap: 10px;
-  margin-bottom: 8px; padding: 0 4px;
-}
-.daily-group-title { font-size: 14px; font-weight: 600; color: #374151; }
-.daily-group-date { font-size: 12px; color: #9ca3af; }
-.daily-group-count {
-  background: #e5e7eb; color: #4b5563;
-  padding: 1px 8px; border-radius: 10px;
-  font-size: 11px; font-weight: 500;
-}
-.daily-group.overdue .daily-group-title { color: #dc2626; }
-.daily-group.overdue .daily-group-count { background: #fee2e2; color: #991b1b; }
-.daily-group.today .daily-group-title { color: #4f46e5; }
-.daily-group.today .daily-group-count { background: #e0e7ff; color: #3730a3; }
-
-.daily-card {
-  background: white;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
-  overflow: hidden;
-}
-.daily-row {
-  display: grid;
-  grid-template-columns: 92px 92px 1fr auto auto;
-  gap: 12px;
-  padding: 12px 14px;
+/* Weekly tasks view */
+.weekly-toolbar {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #f3f4f6;
+  gap: 12px;
+  margin: 6px 0 12px;
+}
+.weekly-title { font-size: 18px; font-weight: 700; color: #111827; }
+.weekly-nav { display: flex; align-items: center; gap: 8px; }
+.weekly-nav-btn {
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #374151;
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 13px;
   cursor: pointer;
 }
-.daily-row:last-child { border-bottom: none; }
-.daily-row:hover { background: #fafafa; }
-.daily-date {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+.weekly-nav-btn:hover { background: #f9fafb; }
+.weekly-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(128px, 1fr));
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
 }
-.daily-date-main { font-size: 13px; font-weight: 600; color: #111827; }
-.daily-date-sub { font-size: 11px; color: #9ca3af; }
-.daily-date.today .daily-date-main { color: #4f46e5; }
-.daily-date.overdue .daily-date-main { color: #dc2626; }
-.daily-owner {
+.weekly-day {
+  min-height: 420px;
+  border-right: 1px solid #e5e7eb;
+  padding: 10px 8px;
+}
+.weekly-day:last-child { border-right: none; }
+.weekly-day-name {
+  text-align: center;
   font-size: 13px;
   font-weight: 600;
+  color: #9ca3af;
+  margin-bottom: 10px;
+}
+.weekly-day-number {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  height: 28px;
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 600;
   color: #374151;
-  min-width: 0;
+}
+.weekly-day.today .weekly-day-number span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #ef4444;
+  color: white;
+}
+.weekly-task-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 9px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  cursor: pointer;
+}
+.weekly-task-card:hover { border-color: #c7d2fe; box-shadow: 0 2px 6px rgba(79,70,229,0.12); }
+.weekly-task-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.35;
+  margin-bottom: 8px;
+  word-break: break-word;
+}
+.weekly-task-owner, .weekly-task-date, .weekly-task-project {
+  font-size: 12px;
+  color: #4b5563;
+  margin-top: 5px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.daily-owner.unassigned { color: #9ca3af; font-weight: 500; }
-.daily-task-title { font-weight: 500; color: #111827; }
-.daily-task-deliverable { font-size: 11px; color: #6b7280; margin-top: 2px; }
+.weekly-task-project { color: #6b7280; }
+.weekly-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #374151;
+}
+.weekly-done-box {
+  width: 14px;
+  height: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  background: white;
+}
+.weekly-task-card.done { opacity: 0.62; }
+.weekly-task-card.done .weekly-task-title { text-decoration: line-through; color: #6b7280; }
+.weekly-task-card.done .weekly-done-box {
+  background: #10b981;
+  border-color: #10b981;
+  box-shadow: inset 0 0 0 3px white;
+}
+.weekly-empty {
+  color: #d1d5db;
+  font-size: 12px;
+  text-align: center;
+  padding-top: 16px;
+}
+.unscheduled-section {
+  margin-top: 16px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+}
+.unscheduled-title { font-size: 14px; font-weight: 700; color: #374151; margin-bottom: 10px; }
+.unscheduled-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
 .project-pill {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 8px; border-radius: 12px;
@@ -319,7 +387,6 @@ body {
 .project-pill .dot {
   width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
 }
-.daily-status { justify-self: end; }
 
 .modal-overlay {
   position: fixed; inset: 0;
@@ -397,20 +464,37 @@ body {
   border-radius: 3px;
   font-size: 12px;
 }
+.boot-fallback {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 40px auto;
+  max-width: 680px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+}
+.boot-fallback h2 { font-size: 20px; margin-bottom: 8px; color: #111827; }
+.boot-fallback p { color: #4b5563; margin: 8px 0; }
+.boot-fallback code {
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+}
 
 @media (max-width: 700px) {
   .charts-row { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
   .tasks-table { font-size: 12px; }
-  .daily-row { grid-template-columns: 76px 1fr auto; gap: 8px; }
-  .daily-date { grid-row: span 2; }
-  .daily-owner { grid-column: 2; }
-  .daily-task { grid-column: 2 / 4; }
-  .daily-row > .project-pill,
-  .daily-row > .daily-status {
-    grid-column: 2; margin-top: 4px;
+  .weekly-toolbar { align-items: flex-start; flex-direction: column; }
+  .weekly-grid { grid-template-columns: 1fr; }
+  .weekly-day {
+    min-height: 120px;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
   }
-  .daily-status { justify-self: start; }
+  .weekly-day:last-child { border-bottom: none; }
+  .weekly-day-name { text-align: left; }
 }
 </style>
 </head>
@@ -434,6 +518,12 @@ body {
   <div id="configWarning" class="config-warning" style="display:none">
     ⚠️ <strong>尚未設定 Firebase</strong><br>
     請編輯 <code>firebase-config.js</code> 填入你的 Firebase 設定。詳細步驟請參考 <code>README.md</code>。
+  </div>
+
+  <div id="bootFallback" class="boot-fallback">
+    <h2>正在載入專案管理平台...</h2>
+    <p>如果畫面停在這裡，通常是因為你用 <code>file://</code> 直接開啟檔案，瀏覽器擋住了 Firebase 模組載入。</p>
+    <p>請用本機伺服器網址開啟，例如 <code>http://127.0.0.1:8125/index.html</code>。</p>
   </div>
 
   <!-- Main app -->
@@ -504,6 +594,7 @@ body {
     <!-- Daily view -->
     <div id="viewDaily" style="display:none">
       <div class="filter-bar">
+        <button class="btn btn-secondary" onclick="openDailyTaskModal()">＋ 新增任務</button>
         <select id="dailyFilterOwner" onchange="renderDaily()" style="flex:1">
           <option value="">👥 全部負責人的任務</option>
         </select>
@@ -626,6 +717,7 @@ import {
 import { firebaseConfig } from "./firebase-config.js";
 
 let app, auth, db;
+document.getElementById('bootFallback').style.display = 'none';
 const isConfigured = firebaseConfig &&
   firebaseConfig.apiKey &&
   firebaseConfig.apiKey !== "YOUR_API_KEY";
@@ -646,7 +738,8 @@ let state = {
   projects: [],
   tasks: [],
   collapsed: JSON.parse(localStorage.getItem('pm_collapsed') || '{}'),
-  view: localStorage.getItem('pm_view') || 'projects'
+  view: localStorage.getItem('pm_view') || 'projects',
+  weeklyStart: null
 };
 let unsubProjects = null, unsubTasks = null;
 
@@ -799,6 +892,11 @@ window.openTaskModal = (projectId, taskId) => {
   }
   document.getElementById('taskModal').classList.add('active');
 };
+window.openDailyTaskModal = () => {
+  const project = state.projects.find(p => projectCategory(p) === 'active') || state.projects[0];
+  if (!project) { toast('請先新增一個專案'); return; }
+  openTaskModal(project.id);
+};
 window.closeTaskModal = () => document.getElementById('taskModal').classList.remove('active');
 window.saveTask = async () => {
   const title = document.getElementById('taskTitle').value.trim();
@@ -899,6 +997,32 @@ function relativeDateText(dateStr) {
   if (diff < 0) return `逾期 ${-diff} 天`;
   if (diff <= 7) return `${diff} 天後 ${weekday(d)}`;
   return weekday(d);
+}
+function dateKey(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function startOfWeek(d = new Date()) {
+  const start = new Date(d);
+  start.setHours(0,0,0,0);
+  const offset = (start.getDay() + 6) % 7;
+  start.setDate(start.getDate() - offset);
+  return start;
+}
+function addDays(d, days) {
+  const next = new Date(d);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+function formatFullDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}/${d.getFullYear()}`;
+}
+function monthTitle(d) {
+  return `${d.getFullYear()} 年 ${d.getMonth() + 1} 月`;
 }
 
 window.render = function() {
@@ -1026,6 +1150,16 @@ function renderTask(projectId, t) {
     </tr>`;
 }
 
+window.shiftWeek = (days) => {
+  const current = state.weeklyStart || startOfWeek();
+  state.weeklyStart = addDays(current, days);
+  renderDaily();
+};
+window.goTodayWeek = () => {
+  state.weeklyStart = startOfWeek();
+  renderDaily();
+};
+
 window.renderDaily = function() {
   const ownerSel = document.getElementById('dailyFilterOwner');
   const cur = ownerSel.value;
@@ -1051,36 +1185,8 @@ window.renderDaily = function() {
     return true;
   });
 
-  const groups = {
-    overdue: { title: '🔴 已逾期', tasks: [], cls: 'overdue' },
-    today: { title: '📌 今天', tasks: [], cls: 'today' },
-    tomorrow: { title: '明天', tasks: [], cls: '' },
-    thisWeek: { title: '本週剩餘', tasks: [], cls: '' },
-    nextWeek: { title: '下週', tasks: [], cls: '' },
-    later: { title: '更之後', tasks: [], cls: '' },
-    noDate: { title: '⏳ 沒設定截止日', tasks: [], cls: '' }
-  };
-
-  filtered.forEach(t => {
-    if (!t.deadline) { groups.noDate.tasks.push(t); return; }
-    const diff = dayDiff(t.deadline);
-    if (diff < 0) groups.overdue.tasks.push(t);
-    else if (diff === 0) groups.today.tasks.push(t);
-    else if (diff === 1) groups.tomorrow.tasks.push(t);
-    else if (diff <= 7) groups.thisWeek.tasks.push(t);
-    else if (diff <= 14) groups.nextWeek.tasks.push(t);
-    else groups.later.tasks.push(t);
-  });
-
   const prioOrder = { high: 0, mid: 1, low: 2 };
-  Object.values(groups).forEach(g => {
-    g.tasks.sort((a, b) => {
-      if (a.deadline && b.deadline && a.deadline !== b.deadline) {
-        return a.deadline < b.deadline ? -1 : 1;
-      }
-      return (prioOrder[a.priority]||1) - (prioOrder[b.priority]||1);
-    });
-  });
+  const sortTasks = (tasks) => tasks.sort((a, b) => (prioOrder[a.priority]||1) - (prioOrder[b.priority]||1) || a.title.localeCompare(b.title, 'zh-Hant'));
 
   const container = document.getElementById('dailyContainer');
   const totalTasks = filtered.length;
@@ -1103,55 +1209,63 @@ window.renderDaily = function() {
     return;
   }
 
-  let html = '';
-  for (const key of ['today','overdue','tomorrow','thisWeek','nextWeek','later','noDate']) {
-    const g = groups[key];
-    if (g.tasks.length === 0) continue;
+  const weekStart = state.weeklyStart || startOfWeek();
+  state.weeklyStart = weekStart;
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const weekEnd = addDays(weekStart, 6);
+  const tasksByDate = Object.fromEntries(weekDays.map(d => [dateKey(d), []]));
+  const unscheduled = [];
 
-    let dateLabel = '';
-    if (key === 'today') {
-      const t = new Date();
-      dateLabel = `${t.getMonth()+1}/${t.getDate()} (${weekday(t)})`;
-    } else if (key === 'tomorrow') {
-      const t = new Date(); t.setDate(t.getDate() + 1);
-      dateLabel = `${t.getMonth()+1}/${t.getDate()} (${weekday(t)})`;
-    }
+  filtered.forEach(t => {
+    if (!t.deadline) { unscheduled.push(t); return; }
+    if (tasksByDate[t.deadline]) tasksByDate[t.deadline].push(t);
+  });
+  Object.values(tasksByDate).forEach(sortTasks);
+  sortTasks(unscheduled);
 
-    html += `<div class="daily-group ${g.cls}">
-      <div class="daily-group-header">
-        <span class="daily-group-title">${g.title}</span>
-        ${dateLabel ? `<span class="daily-group-date">${dateLabel}</span>` : ''}
-        <span class="daily-group-count">${g.tasks.length}</span>
-      </div>
-      <div class="daily-card">
-        ${g.tasks.map(t => renderDailyRow(t)).join('')}
-      </div>
+  const todayKey = dateKey(new Date());
+  const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const gridHtml = weekDays.map((d, i) => {
+    const key = dateKey(d);
+    const tasks = tasksByDate[key];
+    return `<div class="weekly-day ${key === todayKey ? 'today' : ''}">
+      <div class="weekly-day-name">${dayNames[i]}</div>
+      <div class="weekly-day-number"><span>${d.getDate()}</span></div>
+      ${tasks.length ? tasks.map(t => renderWeeklyTask(t)).join('') : '<div class="weekly-empty">沒有任務</div>'}
     </div>`;
-  }
+  }).join('');
 
-  container.innerHTML = html;
+  container.innerHTML = `
+    <div class="weekly-toolbar">
+      <div class="weekly-title">${monthTitle(weekStart)} <span style="font-size:12px;color:#9ca3af;font-weight:500">${formatDateShort(dateKey(weekStart))} - ${formatDateShort(dateKey(weekEnd))}</span></div>
+      <div class="weekly-nav">
+        <button class="weekly-nav-btn" onclick="shiftWeek(-7)">‹</button>
+        <button class="weekly-nav-btn" onclick="goTodayWeek()">Today</button>
+        <button class="weekly-nav-btn" onclick="shiftWeek(7)">›</button>
+      </div>
+    </div>
+    <div class="weekly-grid">${gridHtml}</div>
+    ${unscheduled.length ? `<div class="unscheduled-section">
+      <div class="unscheduled-title">未排程</div>
+      <div class="unscheduled-grid">${unscheduled.map(t => renderWeeklyTask(t)).join('')}</div>
+    </div>` : ''}
+  `;
 };
 
-function renderDailyRow(t) {
+function renderWeeklyTask(t) {
   const p = t._project;
-  const diff = dayDiff(t.deadline);
-  const dateClass = diff === 0 ? 'today' : (isOverdue(t) ? 'overdue' : '');
   const ownerText = t.owner ? escapeHtml(t.owner) : '未指派';
+  const done = t.status === 'done';
   return `
-    <div class="daily-row" onclick="openTaskModal('${p.id}','${t.id}')">
-      <div class="daily-date ${dateClass}">
-        <div class="daily-date-main">${formatDateShort(t.deadline)}</div>
-        <div class="daily-date-sub">${relativeDateText(t.deadline)}</div>
+    <div class="weekly-task-card ${done ? 'done' : ''}" onclick="openTaskModal('${p.id}','${t.id}')">
+      <div class="weekly-task-title">● ${escapeHtml(t.title)}</div>
+      <div class="weekly-task-owner">${ownerText}</div>
+      <div class="weekly-task-date">${t.deadline ? formatFullDate(t.deadline) : '未排程'}</div>
+      <div class="weekly-task-project" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>
+      <div class="weekly-done" onclick="event.stopPropagation();quickToggleStatus('${t.id}')">
+        <span class="weekly-done-box"></span>
+        <span>Done</span>
       </div>
-      <div class="daily-owner ${t.owner ? '' : 'unassigned'}" title="${ownerText}">${ownerText}</div>
-      <div class="daily-task">
-        <div class="daily-task-title">${escapeHtml(t.title)}</div>
-        ${t.deliverable ? `<div class="daily-task-deliverable">📦 ${escapeHtml(t.deliverable)}</div>` : ''}
-      </div>
-      <div class="project-pill" title="${escapeHtml(p.name)}">
-        <span class="dot" style="background:${p.color}"></span>${escapeHtml(p.name)}
-      </div>
-      <span class="daily-status status-badge status-${t.status}" style="cursor:pointer" onclick="event.stopPropagation();quickToggleStatus('${t.id}')" title="點擊切換">${statusLabel(t.status)}</span>
     </div>
   `;
 }

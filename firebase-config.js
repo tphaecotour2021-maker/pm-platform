@@ -14,4 +14,11 @@ export const firebaseConfig = {
   appId: "1:39181458704:web:1a35ec18bd8773b8905995"
 };
 
+// =============================================================
+// 團隊白名單（選用）
+// 留空陣列 [] 代表「任何登入的 Google 帳號都能用」
+// 若要限制只有特定成員可用，請同時編輯 firestore.rules：
+//   export const allowedEmails = ["alice@example.com", "bob@example.com"];
+// =============================================================
+
 export const allowedEmails = [];
