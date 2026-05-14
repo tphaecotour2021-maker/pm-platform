@@ -656,6 +656,25 @@ body {
 }
 .form-group textarea { resize: vertical; min-height: 60px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.weekday-picker {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.weekday-picker label {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 4px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #f9fafb;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.weekday-picker input { width: auto; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
 
 .toast {
@@ -952,6 +971,18 @@ body {
       <input type="text" id="routineOwner" placeholder="姓名" list="ownersList">
     </div>
     <div class="form-group">
+      <label>每週幾執行</label>
+      <div class="weekday-picker">
+        <label><input type="checkbox" name="routineWeekday" value="1">一</label>
+        <label><input type="checkbox" name="routineWeekday" value="2">二</label>
+        <label><input type="checkbox" name="routineWeekday" value="3">三</label>
+        <label><input type="checkbox" name="routineWeekday" value="4">四</label>
+        <label><input type="checkbox" name="routineWeekday" value="5">五</label>
+        <label><input type="checkbox" name="routineWeekday" value="6">六</label>
+        <label><input type="checkbox" name="routineWeekday" value="0">日</label>
+      </div>
+    </div>
+    <div class="form-group">
       <label>備註</label>
       <textarea id="routineNotes" placeholder="每天固定要做的補充說明..."></textarea>
     </div>
@@ -1137,15 +1168,21 @@ window.deleteProject = async (id) => {
 window.openRoutineModal = (id) => {
   document.getElementById('routineId').value = id || '';
   refreshOwnersList();
+  document.querySelectorAll('input[name="routineWeekday"]').forEach(input => input.checked = false);
   if (id) {
     const r = state.routines.find(x => x.id === id);
     document.getElementById('routineModalTitle').textContent = '編輯 Routine';
     document.getElementById('routineTitle').value = r.title || '';
     document.getElementById('routineOwner').value = r.owner || '';
     document.getElementById('routineNotes').value = r.notes || '';
+    const days = routineDays(r);
+    document.querySelectorAll('input[name="routineWeekday"]').forEach(input => {
+      input.checked = days.includes(Number(input.value));
+    });
   } else {
     document.getElementById('routineModalTitle').textContent = '新增 Routine';
     ['routineTitle','routineOwner','routineNotes'].forEach(i => document.getElementById(i).value = '');
+    document.querySelectorAll('input[name="routineWeekday"]').forEach(input => input.checked = true);
   }
   document.getElementById('routineModal').classList.add('active');
 };
@@ -1157,6 +1194,7 @@ window.saveRoutine = async () => {
   const data = {
     title,
     owner: document.getElementById('routineOwner').value.trim(),
+    weekdays: [...document.querySelectorAll('input[name="routineWeekday"]:checked')].map(input => Number(input.value)),
     notes: document.getElementById('routineNotes').value.trim(),
     active: true,
     updatedAt: serverTimestamp(),
@@ -1363,6 +1401,21 @@ function orderedItems(items) {
 }
 function nextOrder(items) {
   return items.reduce((max, item, index) => Math.max(max, orderValue(item, index)), -1) + 1;
+}
+function routineDays(r) {
+  return Array.isArray(r.weekdays) && r.weekdays.length ? r.weekdays.map(Number) : [0,1,2,3,4,5,6];
+}
+function routineAppliesOn(r, date) {
+  return routineDays(r).includes(date.getDay());
+}
+function routineDaysLabel(r) {
+  const days = routineDays(r);
+  if (days.length === 7) return '每天';
+  const labels = {1:'週一',2:'週二',3:'週三',4:'週四',5:'週五',6:'週六',0:'週日'};
+  return days
+    .sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7))
+    .map(d => labels[d])
+    .join('、');
 }
 function isOverdue(t) {
   if (!t.deadline || t.status === 'done') return false;
@@ -1703,6 +1756,7 @@ function renderDayMode(container, filtered, routines, sortTasks) {
   state.dailyDate = selectedDate;
   const selectedKey = dateKey(selectedDate);
   const dayTasks = sortTasks(filtered.filter(t => t.deadline === selectedKey));
+  const dayRoutines = routines.filter(r => routineAppliesOn(r, selectedDate));
   const title = dayDiff(selectedKey) === 0 ? '今天' : `${formatDateShort(selectedKey)} ${weekday(selectedDate)}`;
 
   container.innerHTML = `
@@ -1715,7 +1769,7 @@ function renderDayMode(container, filtered, routines, sortTasks) {
       </div>
     </div>
     <div class="daily-list">
-      ${routines.length ? `<div class="daily-list-section-title">每日 Routine</div>${routines.map((r, index) => renderRoutineListItem(r, index, routines.length)).join('')}` : ''}
+      ${dayRoutines.length ? `<div class="daily-list-section-title">Routine</div>${dayRoutines.map((r, index) => renderRoutineListItem(r, index, dayRoutines.length)).join('')}` : ''}
       <div class="daily-list-section-title">專案任務</div>
       ${dayTasks.length ? dayTasks.map((t, index) => renderDailyListTask(t, index, dayTasks.length)).join('') : `<div class="empty-state"><div class="icon">✓</div><div>這天沒有任務</div></div>`}
     </div>
@@ -1742,11 +1796,12 @@ function renderWeekMode(container, filtered, routines, sortTasks) {
   const gridHtml = weekDays.map((d, i) => {
     const key = dateKey(d);
     const tasks = tasksByDate[key];
+    const dayRoutines = routines.filter(r => routineAppliesOn(r, d));
     return `<div class="weekly-day ${key === todayKey ? 'today' : ''}">
       <div class="weekly-day-name">${dayNames[i]}</div>
       <div class="weekly-day-number"><span>${d.getDate()}</span></div>
-      ${routines.map(r => renderWeeklyRoutine(r)).join('')}
-      ${tasks.length ? tasks.map(t => renderWeeklyTask(t)).join('') : (routines.length ? '' : '<div class="weekly-empty">沒有任務</div>')}
+      ${dayRoutines.map(r => renderWeeklyRoutine(r)).join('')}
+      ${tasks.length ? tasks.map(t => renderWeeklyTask(t)).join('') : (dayRoutines.length ? '' : '<div class="weekly-empty">沒有任務</div>')}
     </div>`;
   }).join('');
 
@@ -1786,12 +1841,13 @@ function renderMonthMode(container, filtered, routines, sortTasks) {
   const gridHtml = cells.map(d => {
     const key = dateKey(d);
     const tasks = byDate[key] || [];
+    const dayRoutines = routines.filter(r => routineAppliesOn(r, d));
     const visible = tasks.slice(0, 3);
     return `<div class="monthly-cell ${d.getMonth() === month ? '' : 'outside'} ${key === todayKey ? 'today' : ''}">
       <div class="monthly-number"><span>${d.getDate()}</span></div>
-      ${routines.slice(0, 2).map(r => `<div class="monthly-task routine" onclick="openRoutineModal('${r.id}')" title="${escapeHtml(r.title)}">${escapeHtml(r.title)}</div>`).join('')}
+      ${dayRoutines.slice(0, 2).map(r => `<div class="monthly-task routine" onclick="openRoutineModal('${r.id}')" title="${escapeHtml(r.title)}">${escapeHtml(r.title)}</div>`).join('')}
       ${visible.map(t => `<div class="monthly-task" onclick="openTaskModal('${t._project.id}','${t.id}')" title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</div>`).join('')}
-      ${tasks.length + routines.length > visible.length + Math.min(routines.length, 2) ? `<div class="monthly-more">+${tasks.length + routines.length - visible.length - Math.min(routines.length, 2)} 更多</div>` : ''}
+      ${tasks.length + dayRoutines.length > visible.length + Math.min(dayRoutines.length, 2) ? `<div class="monthly-more">+${tasks.length + dayRoutines.length - visible.length - Math.min(dayRoutines.length, 2)} 更多</div>` : ''}
     </div>`;
   }).join('');
 
@@ -1835,7 +1891,7 @@ function renderWeeklyRoutine(r) {
     <div class="weekly-task-card routine" onclick="openRoutineModal('${r.id}')">
       <div class="weekly-task-title">◆ ${escapeHtml(r.title)}</div>
       <div class="weekly-task-owner">${ownerText}</div>
-      <div class="weekly-task-date">每日 Routine</div>
+      <div class="weekly-task-date">${routineDaysLabel(r)} Routine</div>
       ${r.notes ? `<div class="weekly-task-project">${escapeHtml(r.notes)}</div>` : ''}
     </div>
   `;
@@ -1850,7 +1906,7 @@ function renderRoutineListItem(r, index, total) {
         <div class="daily-list-title">${escapeHtml(r.title)}</div>
         <div class="daily-list-meta">
           <span>${ownerText}</span>
-          <span>每日 Routine</span>
+          <span>${routineDaysLabel(r)} Routine</span>
           ${r.notes ? `<span>${escapeHtml(r.notes)}</span>` : ''}
         </div>
       </div>
