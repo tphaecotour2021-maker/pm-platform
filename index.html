@@ -415,6 +415,10 @@ body {
   cursor: pointer;
 }
 .weekly-task-card:hover { border-color: #c7d2fe; box-shadow: 0 2px 6px rgba(79,70,229,0.12); }
+.weekly-task-card.routine {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
 .weekly-task-title {
   font-size: 13px;
   font-weight: 700;
@@ -497,7 +501,7 @@ body {
 }
 .daily-list-card {
   display: grid;
-  grid-template-columns: 34px 1fr 24px;
+  grid-template-columns: 34px 1fr auto;
   gap: 12px;
   align-items: center;
   background: #f8fbff;
@@ -509,6 +513,17 @@ body {
   box-shadow: 0 1px 2px rgba(15,23,42,0.03);
 }
 .daily-list-card:hover { border-color: #bfdbfe; }
+.daily-list-card.routine {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+.daily-list-card.routine .daily-check-circle { border-color: #3b82f6; }
+.daily-list-section-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #334155;
+  margin: 14px 2px 10px;
+}
 .daily-check-circle {
   width: 26px;
   height: 26px;
@@ -533,7 +548,21 @@ body {
   color: #64748b;
 }
 .daily-list-date { color: #ef4444; font-weight: 700; }
-.daily-flag { color: #cbd5e1; font-size: 22px; }
+.task-order-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.task-order-controls button {
+  border: 1px solid #dbe3ef;
+  background: white;
+  color: #64748b;
+  border-radius: 6px;
+  width: 26px;
+  height: 24px;
+  cursor: pointer;
+}
+.task-order-controls button:hover { background: #f8fafc; color: #2563eb; }
 .monthly-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(112px, 1fr));
@@ -581,6 +610,7 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.monthly-task.routine { background: #dbeafe; color: #1d4ed8; }
 .monthly-more { font-size: 11px; color: #94a3b8; margin-top: 4px; }
 .project-pill {
   display: inline-flex; align-items: center; gap: 4px;
@@ -779,6 +809,7 @@ body {
     <div id="viewDaily" style="display:none">
       <div class="filter-bar">
         <button class="btn btn-secondary" onclick="openDailyTaskModal()">＋ 新增任務</button>
+        <button class="btn btn-secondary" onclick="openRoutineModal()">＋ Routine</button>
         <div class="view-switch">
           <button id="dailyModeDay" onclick="setTaskMode('day')">每日</button>
           <button id="dailyModeWeek" onclick="setTaskMode('week')">每週</button>
@@ -908,6 +939,29 @@ body {
   </div>
 </div>
 
+<div class="modal-overlay" id="routineModal">
+  <div class="modal">
+    <h2 id="routineModalTitle">新增 Routine</h2>
+    <input type="hidden" id="routineId">
+    <div class="form-group">
+      <label>Routine 名稱 *</label>
+      <input type="text" id="routineTitle" placeholder="例如：確認天氣">
+    </div>
+    <div class="form-group">
+      <label>負責人</label>
+      <input type="text" id="routineOwner" placeholder="姓名" list="ownersList">
+    </div>
+    <div class="form-group">
+      <label>備註</label>
+      <textarea id="routineNotes" placeholder="每天固定要做的補充說明..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeRoutineModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveRoutine()">儲存</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -942,6 +996,7 @@ if (!isConfigured) {
 let state = {
   projects: [],
   tasks: [],
+  routines: [],
   collapsed: JSON.parse(localStorage.getItem('pm_collapsed') || '{}'),
   projectTaskViews: JSON.parse(localStorage.getItem('pm_project_task_views') || '{}'),
   view: localStorage.getItem('pm_view') || 'projects',
@@ -950,13 +1005,14 @@ let state = {
   weeklyStart: null,
   monthlyDate: null
 };
-let unsubProjects = null, unsubTasks = null;
+let unsubProjects = null, unsubTasks = null, unsubRoutines = null;
 
 function showLogin() {
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('appScreen').style.display = 'none';
   if (unsubProjects) unsubProjects();
   if (unsubTasks) unsubTasks();
+  if (unsubRoutines) unsubRoutines();
 }
 function showApp(user) {
   document.getElementById('loginScreen').style.display = 'none';
@@ -1003,6 +1059,15 @@ function subscribeData() {
       setSync(true);
     },
     err => { console.error(err); setSync(false); toast('讀取任務失敗：' + err.message); }
+  );
+  unsubRoutines = onSnapshot(
+    collection(db, 'routines'),
+    snap => {
+      state.routines = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (state.view === 'daily') renderDaily();
+      setSync(true);
+    },
+    err => { console.error(err); setSync(false); toast('讀取 Routine 失敗：' + err.message); }
   );
 }
 function setSync(ok) {
@@ -1068,6 +1133,51 @@ window.deleteProject = async (id) => {
     await Promise.all(tasksToDelete.map(t => deleteDoc(doc(db, 'tasks', t.id))));
     await deleteDoc(doc(db, 'projects', id));
   } catch(e) { toast('刪除失敗：' + e.message); }
+};
+window.openRoutineModal = (id) => {
+  document.getElementById('routineId').value = id || '';
+  refreshOwnersList();
+  if (id) {
+    const r = state.routines.find(x => x.id === id);
+    document.getElementById('routineModalTitle').textContent = '編輯 Routine';
+    document.getElementById('routineTitle').value = r.title || '';
+    document.getElementById('routineOwner').value = r.owner || '';
+    document.getElementById('routineNotes').value = r.notes || '';
+  } else {
+    document.getElementById('routineModalTitle').textContent = '新增 Routine';
+    ['routineTitle','routineOwner','routineNotes'].forEach(i => document.getElementById(i).value = '');
+  }
+  document.getElementById('routineModal').classList.add('active');
+};
+window.closeRoutineModal = () => document.getElementById('routineModal').classList.remove('active');
+window.saveRoutine = async () => {
+  const title = document.getElementById('routineTitle').value.trim();
+  if (!title) { alert('請輸入 Routine 名稱'); return; }
+  const id = document.getElementById('routineId').value;
+  const data = {
+    title,
+    owner: document.getElementById('routineOwner').value.trim(),
+    notes: document.getElementById('routineNotes').value.trim(),
+    active: true,
+    updatedAt: serverTimestamp(),
+    updatedBy: auth.currentUser.email
+  };
+  try {
+    if (id) {
+      await updateDoc(doc(db, 'routines', id), data);
+    } else {
+      data.order = nextOrder(state.routines);
+      data.createdAt = serverTimestamp();
+      data.createdBy = auth.currentUser.email;
+      await addDoc(collection(db, 'routines'), data);
+    }
+    closeRoutineModal();
+  } catch(e) { toast('儲存 Routine 失敗：' + e.message); }
+};
+window.deleteRoutine = async (id) => {
+  if (!confirm('確定要刪除此 Routine？')) return;
+  try { await deleteDoc(doc(db, 'routines', id)); }
+  catch(e) { toast('刪除 Routine 失敗：' + e.message); }
 };
 window.toggleProjectCategory = async (id) => {
   const p = state.projects.find(x => x.id === id);
@@ -1141,6 +1251,7 @@ window.saveTask = async () => {
     if (taskId) {
       await updateDoc(doc(db, 'tasks', taskId), data);
     } else {
+      data.order = nextOrder(tasksOf(projectId));
       data.createdAt = serverTimestamp();
       data.createdBy = auth.currentUser.email;
       await addDoc(collection(db, 'tasks'), data);
@@ -1152,6 +1263,24 @@ window.deleteTask = async (taskId) => {
   if (!confirm('確定要刪除此任務？')) return;
   try { await deleteDoc(doc(db, 'tasks', taskId)); }
   catch(e) { toast('刪除失敗：' + e.message); }
+};
+window.moveItemOrder = async (type, id, direction, scope = '') => {
+  const isRoutine = type === 'routine';
+  const items = isRoutine
+    ? orderedItems(state.routines.filter(r => r.active !== false))
+    : orderedItems(state.tasks.filter(t => t.projectId === scope));
+  const index = items.findIndex(x => x.id === id);
+  const nextIndex = index + direction;
+  if (index < 0 || nextIndex < 0 || nextIndex >= items.length) return;
+  const current = items[index];
+  const target = items[nextIndex];
+  const collectionName = isRoutine ? 'routines' : 'tasks';
+  try {
+    await Promise.all([
+      updateDoc(doc(db, collectionName, current.id), { order: orderValue(target, nextIndex), updatedAt: serverTimestamp(), updatedBy: auth.currentUser.email }),
+      updateDoc(doc(db, collectionName, target.id), { order: orderValue(current, index), updatedAt: serverTimestamp(), updatedBy: auth.currentUser.email })
+    ]);
+  } catch(e) { toast('調整順序失敗：' + e.message); }
 };
 window.quickToggleStatus = async (taskId) => {
   const t = state.tasks.find(x => x.id === taskId);
@@ -1173,7 +1302,7 @@ window.toggleProject = (id) => {
 
 function tasksOf(projectId) { return state.tasks.filter(t => t.projectId === projectId); }
 function getAllOwners() {
-  return [...new Set(state.tasks.map(t => t.owner).filter(Boolean))].sort();
+  return [...new Set([...state.tasks.map(t => t.owner), ...state.routines.map(r => r.owner)].filter(Boolean))].sort();
 }
 function refreshOwnersList() {
   document.getElementById('ownersList').innerHTML = getAllOwners().map(o => `<option value="${escapeHtml(o)}">`).join('');
@@ -1225,6 +1354,15 @@ function taskByIdMap(tasks) {
   const map = {};
   tasks.forEach(t => { map[t.id] = t; });
   return map;
+}
+function orderValue(item, fallback) {
+  return Number.isFinite(Number(item.order)) ? Number(item.order) : fallback;
+}
+function orderedItems(items) {
+  return [...items].sort((a, b) => orderValue(a, 9999) - orderValue(b, 9999) || compareTaskDates(a, b));
+}
+function nextOrder(items) {
+  return items.reduce((max, item, index) => Math.max(max, orderValue(item, index)), -1) + 1;
 }
 function isOverdue(t) {
   if (!t.deadline || t.status === 'done') return false;
@@ -1393,17 +1531,17 @@ function renderProject(p) {
 }
 
 function renderProjectTaskList(p) {
-  const sorted = [...p.tasks].sort(compareTaskDates);
+  const sorted = orderedItems(p.tasks);
   return `<table class="tasks-table">
     <thead><tr>
       <th style="width:80px">狀態</th><th>任務</th><th>負責人</th>
-      <th>時間</th><th>關係</th><th>產出</th><th style="width:100px">操作</th>
+      <th>時間</th><th>關係</th><th>產出</th><th style="width:130px">操作</th>
     </tr></thead>
-    <tbody>${sorted.map(t => renderTask(p.id, t, p.tasks)).join('')}</tbody>
+    <tbody>${sorted.map((t, index) => renderTask(p.id, t, p.tasks, index, sorted.length)).join('')}</tbody>
   </table>`;
 }
 
-function renderTask(projectId, t, projectTasks = []) {
+function renderTask(projectId, t, projectTasks = [], index = 0, total = 1) {
   const overdueClass = isOverdue(t) ? 'deadline-overdue' : (isSoon(t) ? 'deadline-soon' : '');
   const map = taskByIdMap(projectTasks);
   const parent = t.dependsOn ? map[t.dependsOn] : null;
@@ -1425,6 +1563,8 @@ function renderTask(projectId, t, projectTasks = []) {
       <td>${relation}</td>
       <td>${t.deliverable ? escapeHtml(t.deliverable) : '<span style="color:#9ca3af">—</span>'}</td>
       <td>
+        <button class="btn btn-ghost btn-sm" onclick="moveItemOrder('task','${t.id}',-1,'${projectId}')" ${index === 0 ? 'disabled' : ''}>↑</button>
+        <button class="btn btn-ghost btn-sm" onclick="moveItemOrder('task','${t.id}',1,'${projectId}')" ${index === total - 1 ? 'disabled' : ''}>↓</button>
         <button class="btn btn-ghost btn-sm" onclick="openTaskModal('${projectId}','${t.id}')">編輯</button>
         <button class="btn btn-ghost btn-sm" onclick="deleteTask('${t.id}')" style="color:#dc2626">×</button>
       </td>
@@ -1530,8 +1670,12 @@ window.renderDaily = function() {
     return true;
   });
 
-  const prioOrder = { high: 0, mid: 1, low: 2 };
-  const sortTasks = (tasks) => tasks.sort((a, b) => (prioOrder[a.priority]||1) - (prioOrder[b.priority]||1) || a.title.localeCompare(b.title, 'zh-Hant'));
+  const sortTasks = (tasks) => orderedItems(tasks);
+  const filteredRoutines = orderedItems(state.routines.filter(r => {
+    if (r.active === false) return false;
+    if (fOwner && r.owner !== fOwner) return false;
+    return true;
+  }));
 
   const container = document.getElementById('dailyContainer');
   if (state.projects.length === 0) {
@@ -1544,17 +1688,17 @@ window.renderDaily = function() {
   }
 
   if (state.taskMode === 'day') {
-    renderDayMode(container, filtered, sortTasks);
+    renderDayMode(container, filtered, filteredRoutines, sortTasks);
     return;
   }
   if (state.taskMode === 'month') {
-    renderMonthMode(container, filtered, sortTasks);
+    renderMonthMode(container, filtered, filteredRoutines, sortTasks);
     return;
   }
-  renderWeekMode(container, filtered, sortTasks);
+  renderWeekMode(container, filtered, filteredRoutines, sortTasks);
 };
 
-function renderDayMode(container, filtered, sortTasks) {
+function renderDayMode(container, filtered, routines, sortTasks) {
   const selectedDate = state.dailyDate || new Date();
   state.dailyDate = selectedDate;
   const selectedKey = dateKey(selectedDate);
@@ -1571,12 +1715,14 @@ function renderDayMode(container, filtered, sortTasks) {
       </div>
     </div>
     <div class="daily-list">
-      ${dayTasks.length ? dayTasks.map(t => renderDailyListTask(t)).join('') : `<div class="empty-state"><div class="icon">✓</div><div>這天沒有任務</div></div>`}
+      ${routines.length ? `<div class="daily-list-section-title">每日 Routine</div>${routines.map((r, index) => renderRoutineListItem(r, index, routines.length)).join('')}` : ''}
+      <div class="daily-list-section-title">專案任務</div>
+      ${dayTasks.length ? dayTasks.map((t, index) => renderDailyListTask(t, index, dayTasks.length)).join('') : `<div class="empty-state"><div class="icon">✓</div><div>這天沒有任務</div></div>`}
     </div>
   `;
 }
 
-function renderWeekMode(container, filtered, sortTasks) {
+function renderWeekMode(container, filtered, routines, sortTasks) {
   const weekStart = state.weeklyStart || startOfWeek();
   state.weeklyStart = weekStart;
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -1599,7 +1745,8 @@ function renderWeekMode(container, filtered, sortTasks) {
     return `<div class="weekly-day ${key === todayKey ? 'today' : ''}">
       <div class="weekly-day-name">${dayNames[i]}</div>
       <div class="weekly-day-number"><span>${d.getDate()}</span></div>
-      ${tasks.length ? tasks.map(t => renderWeeklyTask(t)).join('') : '<div class="weekly-empty">沒有任務</div>'}
+      ${routines.map(r => renderWeeklyRoutine(r)).join('')}
+      ${tasks.length ? tasks.map(t => renderWeeklyTask(t)).join('') : (routines.length ? '' : '<div class="weekly-empty">沒有任務</div>')}
     </div>`;
   }).join('');
 
@@ -1620,7 +1767,7 @@ function renderWeekMode(container, filtered, sortTasks) {
   `;
 }
 
-function renderMonthMode(container, filtered, sortTasks) {
+function renderMonthMode(container, filtered, routines, sortTasks) {
   const monthDate = state.monthlyDate || new Date();
   state.monthlyDate = monthDate;
   const first = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
@@ -1642,8 +1789,9 @@ function renderMonthMode(container, filtered, sortTasks) {
     const visible = tasks.slice(0, 3);
     return `<div class="monthly-cell ${d.getMonth() === month ? '' : 'outside'} ${key === todayKey ? 'today' : ''}">
       <div class="monthly-number"><span>${d.getDate()}</span></div>
+      ${routines.slice(0, 2).map(r => `<div class="monthly-task routine" onclick="openRoutineModal('${r.id}')" title="${escapeHtml(r.title)}">${escapeHtml(r.title)}</div>`).join('')}
       ${visible.map(t => `<div class="monthly-task" onclick="openTaskModal('${t._project.id}','${t.id}')" title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</div>`).join('')}
-      ${tasks.length > 3 ? `<div class="monthly-more">+${tasks.length - 3} 更多</div>` : ''}
+      ${tasks.length + routines.length > visible.length + Math.min(routines.length, 2) ? `<div class="monthly-more">+${tasks.length + routines.length - visible.length - Math.min(routines.length, 2)} 更多</div>` : ''}
     </div>`;
   }).join('');
 
@@ -1681,7 +1829,41 @@ function renderWeeklyTask(t) {
   `;
 }
 
-function renderDailyListTask(t) {
+function renderWeeklyRoutine(r) {
+  const ownerText = r.owner ? escapeHtml(r.owner) : '未指派';
+  return `
+    <div class="weekly-task-card routine" onclick="openRoutineModal('${r.id}')">
+      <div class="weekly-task-title">◆ ${escapeHtml(r.title)}</div>
+      <div class="weekly-task-owner">${ownerText}</div>
+      <div class="weekly-task-date">每日 Routine</div>
+      ${r.notes ? `<div class="weekly-task-project">${escapeHtml(r.notes)}</div>` : ''}
+    </div>
+  `;
+}
+
+function renderRoutineListItem(r, index, total) {
+  const ownerText = r.owner ? escapeHtml(r.owner) : '未指派';
+  return `
+    <div class="daily-list-card routine" onclick="openRoutineModal('${r.id}')">
+      <div class="daily-check-circle"></div>
+      <div>
+        <div class="daily-list-title">${escapeHtml(r.title)}</div>
+        <div class="daily-list-meta">
+          <span>${ownerText}</span>
+          <span>每日 Routine</span>
+          ${r.notes ? `<span>${escapeHtml(r.notes)}</span>` : ''}
+        </div>
+      </div>
+      <div class="task-order-controls" onclick="event.stopPropagation()">
+        <button onclick="moveItemOrder('routine','${r.id}',-1)" ${index === 0 ? 'disabled' : ''}>↑</button>
+        <button onclick="moveItemOrder('routine','${r.id}',1)" ${index === total - 1 ? 'disabled' : ''}>↓</button>
+        <button onclick="deleteRoutine('${r.id}')" style="color:#dc2626">×</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderDailyListTask(t, index = 0, total = 1) {
   const p = t._project;
   const ownerText = t.owner ? escapeHtml(t.owner) : '未指派';
   const done = t.status === 'done';
@@ -1697,7 +1879,10 @@ function renderDailyListTask(t) {
           ${t.deliverable ? `<span>${escapeHtml(t.deliverable)}</span>` : ''}
         </div>
       </div>
-      <div class="daily-flag">⚐</div>
+      <div class="task-order-controls" onclick="event.stopPropagation()">
+        <button onclick="moveItemOrder('task','${t.id}',-1,'${p.id}')" ${index === 0 ? 'disabled' : ''}>↑</button>
+        <button onclick="moveItemOrder('task','${t.id}',1,'${p.id}')" ${index === total - 1 ? 'disabled' : ''}>↓</button>
+      </div>
     </div>
   `;
 }
