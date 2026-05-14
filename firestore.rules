@@ -6,7 +6,7 @@
 //   2. 把下面整段複製貼上，然後點「發佈」
 // =============================================================
 //
-// 預設：任何已登入的 Google 帳號都能讀寫 projects 與 tasks
+// 預設：任何已登入的 Google 帳號都能讀寫 projects、tasks 與 routines
 // 若要限制團隊成員，把下面的 isTeamMember() 改為白名單比對
 // =============================================================
 
@@ -33,6 +33,10 @@ service cloud.firestore {
     }
 
     match /tasks/{taskId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /routines/{routineId} {
       allow read, write: if isSignedIn();
     }
   }
